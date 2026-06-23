@@ -1,0 +1,259 @@
+/* ── HISTORY LOGS COMPONENT THEMING ── */
+
+.control-panel-box {
+  padding: 20px;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.history-search-bar {
+  width: 100%;
+  background: rgba(11, 19, 43, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 12px 16px;
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 14px;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.history-search-bar:focus {
+  border-color: #00d2ff;
+  box-shadow: 0 0 10px rgba(0, 210, 255, 0.2);
+}
+
+.filter-scroll-row {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.filter-scroll-row::-webkit-scrollbar {
+  height: 4px;
+}
+
+.filter-scroll-row::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+/* Row List Design */
+.history-list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.history-row-card {
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 15px 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.history-row-card:hover {
+  background: rgba(255, 255, 255, 0.02);
+  border-color: rgba(0, 210, 255, 0.2);
+}
+
+.history-row-card.is-expanded {
+  border-color: rgba(0, 210, 255, 0.4);
+  background: rgba(11, 23, 44, 0.4);
+}
+
+.history-main-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.history-left-meta {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.severity-round-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.history-location-text {
+  font-weight: 700;
+  color: #ffffff;
+  font-size: 15px;
+}
+
+.sub-kec-text {
+  color: #94a3b8;
+  font-weight: 400;
+}
+
+.history-date-subtext {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 4px;
+}
+
+.history-right-meta {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.risk-level-badge {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+
+.percentage-display-text {
+  font-size: 18px;
+  font-weight: 800;
+  color: #ffffff;
+  min-width: 50px;
+  text-align: right;
+}
+
+/* Status Pill */
+.status-pill-badge {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+  text-align: center;
+  min-width: 80px;
+}
+
+.status-pill-badge.pending {
+  background: rgba(254, 202, 87, 0.1);
+  color: #feca57;
+  border: 1px solid rgba(254, 202, 87, 0.3);
+}
+
+.status-pill-badge.handled {
+  background: rgba(29, 209, 161, 0.1);
+  color: #1dd1a1;
+  border: 1px solid rgba(29, 209, 161, 0.3);
+}
+
+/* Expanded Grid Layout Details */
+.history-expanded-detail {
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  cursor: default;
+}
+
+.detail-grid-specs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+}
+
+.spec-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.spec-tile label, .spec-note-full label {
+  font-size: 12px;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.spec-tile span {
+  font-size: 14px;
+  color: #cbd5e1;
+  font-weight: 500;
+}
+
+.spec-note-full {
+  margin-top: 20px;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 12px 16px;
+  border-radius: 8px;
+}
+
+.spec-note-full p {
+  margin: 6px 0 0 0;
+  font-size: 13px;
+  color: #94a3b8;
+  line-height: 1.5;
+}
+
+/* Action Buttons Inside */
+.action-button-panel {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-mark-resolved {
+  background: linear-gradient(135deg, #1dd1a1 0%, #10ac84 100%);
+  color: #0b132b;
+  border: none;
+  padding: 8px 18px;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-mark-resolved:hover {
+  box-shadow: 0 0 15px rgba(29, 209, 161, 0.4);
+  transform: translateY(-1px);
+}
+
+.txt-green { color: #1dd1a1 !important; }
+.txt-amber { color: #feca57 !important; }
+
+.text-center-status {
+  padding: 30px;
+  text-align: center;
+  color: #94a3b8;
+}
+
+.footer-action-center {
+  text-align: center;
+  margin-top: 25px;
+}
+
+/* Container Grafik */
+.chart-container {
+  padding: 20px;
+  margin-bottom: 25px;
+  background: rgba(11, 23, 44, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.card-title {
+  font-weight: 700;
+  color: #fff;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Penyesuaian agar responsif di HP */
+@media (max-width: 768px) {
+  .chart-container {
+    padding: 15px;
+  }
+}

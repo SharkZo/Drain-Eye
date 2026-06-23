@@ -1,0 +1,362 @@
+/* ==========================================================================
+   1. GLOBAL WRAPPER & LAYOUT (PREMIUM NAVY)
+   ========================================================================== */
+.pwa-wrap {
+  min-height: 100vh;
+  background-color: #0b132b; /* Navy pekat senada dengan Dashboard */
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* TOPBAR STYLE */
+.pwa-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  background: rgba(15, 23, 42, 0.8);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(0, 210, 255, 0.15); /* Garis neon tipis */
+}
+
+.pwa-back {
+  color: #00d2ff; /* Warna neon cyan */
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.pwa-back:hover {
+  color: #00b4d8;
+  transform: translateX(-3px);
+}
+
+.pwa-title {
+  font-weight: 800;
+  letter-spacing: 1px;
+  font-size: 16px;
+  color: #ffffff;
+}
+
+/* BODY CONTAINER */
+.pwa-body {
+  flex: 1;
+  max-width: 600px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 32px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.pwa-heading {
+  font-size: 24px;
+  font-weight: 700;
+  text-align: center;
+  background: linear-gradient(135deg, #ffffff 0%, #94a3b8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 4px;
+}
+
+.pwa-sub {
+  font-size: 14px;
+  color: #94a3b8;
+  text-align: center;
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+
+/* ==========================================================================
+   2. UPLOAD ZONE (GLASSMORPHISM WITH NEON HOVER)
+   ========================================================================== */
+.upload-zone {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  background: rgba(30, 41, 59, 0.4);
+  border: 2px dashed rgba(0, 210, 255, 0.3); /* Border dashed berwarna cyan */
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  overflow: hidden;
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: inset 0 4px 30px rgba(0, 0, 0, 0.2);
+}
+
+.upload-zone:hover {
+  border-color: #00d2ff;
+  background: rgba(30, 41, 59, 0.6);
+  box-shadow: 0 0 20px rgba(0, 210, 255, 0.2), inset 0 4px 30px rgba(0, 0, 0, 0.2);
+}
+
+.upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 20px;
+}
+
+.upload-icon {
+  font-size: 40px;
+  margin-bottom: 12px;
+  animation: pulse-glow 2s infinite alternate;
+}
+
+.upload-label {
+  font-size: 16px;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 4px;
+}
+
+.upload-sub {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.upload-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+
+/* ==========================================================================
+   3. FORM CONTROLS (DARK INTERFACE INPUTS)
+   ========================================================================== */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #94a3b8;
+  letter-spacing: 0.5px;
+}
+
+.form-input {
+  width: 100%;
+  padding: 14px 16px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  color: #ffffff;
+  font-size: 15px;
+  outline: none;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.form-input:focus {
+  border-color: #00d2ff;
+  background: rgba(15, 23, 42, 0.9);
+  box-shadow: 0 0 10px rgba(0, 210, 255, 0.15);
+}
+
+.form-input::placeholder {
+  color: #475569;
+}
+
+.form-textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+
+/* ==========================================================================
+   4. BUTTONS & ACTIONS (CYAN RADIAL GLOW & LOADING)
+   ========================================================================== */
+.btn-submit {
+  width: 100%;
+  padding: 16px;
+  background: linear-gradient(135deg, #00d2ff 0%, #0077b6 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 210, 255, 0.3);
+  margin-top: 10px;
+}
+
+.btn-submit:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 210, 255, 0.5);
+  background: linear-gradient(135deg, #00e5ff 0%, #0096c7 100%);
+}
+
+.btn-submit:disabled {
+  background: #1e293b;
+  color: #64748b;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+
+/* ==========================================================================
+   5. RESULT CARD & BADGES (SUCCESS SCREEN STATE)
+   ========================================================================== */
+.result-card {
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(0, 210, 255, 0.2);
+  border-radius: 20px;
+  padding: 32px 24px;
+  text-align: center;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+  animation: slide-up 0.4s ease-out;
+}
+
+.result-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.result-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 8px;
+}
+
+.result-msg {
+  font-size: 14px;
+  color: #94a3b8;
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+.result-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+.result-badge {
+  padding: 8px 16px;
+  border-radius: 30px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.result-note {
+  font-size: 13px;
+  color: #64748b;
+  margin-bottom: 24px;
+}
+
+.btn-reset {
+  padding: 12px 24px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-reset:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: #00d2ff;
+}
+
+/* ERROR MESSAGE BOX */
+.error-box {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+  padding: 14px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
+  text-align: left;
+}
+
+
+/* ==========================================================================
+   6. RESPONSIVE DESIGN (TABLET & IPHONE OPTIMIZATION)
+   ========================================================================== */
+@media screen and (max-width: 768px) {
+  .pwa-body {
+    padding: 20px 16px;
+    gap: 16px;
+  }
+
+  .pwa-heading {
+    font-size: 20px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .pwa-topbar {
+    padding: 12px 16px;
+  }
+
+  .pwa-heading {
+    font-size: 18px;
+    text-align: left;
+  }
+
+  .pwa-sub {
+    text-align: left;
+    font-size: 13px;
+  }
+
+  .upload-zone {
+    aspect-ratio: 4 / 3; /* Lebih proporsional untuk rasio kamera smartphone */
+  }
+
+  .form-input {
+    padding: 12px 14px;
+    font-size: 14px;
+  }
+
+  .result-card {
+    padding: 24px 16px;
+  }
+
+  .result-badges {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .result-badge {
+    text-align: center;
+  }
+}
+
+
+/* ==========================================================================
+   7. ANIMATIONS
+   ========================================================================== */
+@keyframes pulse-glow {
+  0% { transform: scale(1); opacity: 0.8; }
+  100% { transform: scale(1.08); opacity: 1; }
+}
+
+@keyframes slide-up {
+  from { transform: translateY(15px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}

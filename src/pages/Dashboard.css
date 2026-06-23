@@ -1,0 +1,977 @@
+/* ── BASE PALETTE & VARIABLES ── */
+:root {
+  --bg-main: #060b19;
+  --bg-sidebar: #0b132b;
+  --bg-card: rgba(15, 23, 42, 0.65);
+  --border-glass: rgba(255, 255, 255, 0.06);
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --accent-cyan: #00d2ff;
+  --accent-emerald: #05c46b;
+  --transition-smooth: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+}
+
+body {
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  overflow-x: hidden;
+}
+
+.dash-wrap {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* ── TOPBAR GLASSMORPHISM ── */
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 30px;
+  background: rgba(11, 19, 43, 0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border-glass);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo-pulse {
+  font-size: 24px;
+  animation: float 3s ease-in-out infinite;
+}
+
+.topbar-title {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  background: linear-gradient(135deg, #fff 30%, var(--accent-cyan));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.topbar-sub {
+  font-size: 12px;
+  color: var(--text-muted);
+  border-left: 1px solid rgba(255,255,255,0.2);
+  padding-left: 12px;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.topbar-time {
+  font-size: 14px;
+  color: var(--accent-cyan);
+  font-family: monospace;
+}
+
+.btn-upload {
+  background: linear-gradient(135deg, #0072ff, #00d2ff);
+  color: #fff;
+  padding: 8px 18px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 4px 15px rgba(0, 210, 255, 0.3);
+  transition: var(--transition-smooth);
+}
+
+.btn-upload:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 210, 255, 0.5);
+}
+
+/* ── INTERFACE BODY LAYOUT ── */
+.dash-body {
+  display: flex;
+  flex: 1;
+}
+
+.sidebar {
+  width: 240px;
+  background-color: var(--bg-sidebar);
+  border-right: 1px solid var(--border-glass);
+  padding: 30px 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.nav-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 8px;
+  transition: var(--transition-smooth);
+  cursor: pointer;
+}
+
+.nav-item:hover, .nav-item.active {
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+}
+
+.nav-item.active {
+  background: linear-gradient(90deg, rgba(0,210,255,0.15) 0%, transparent 100%);
+  border-left: 3px solid var(--accent-cyan);
+}
+
+.nav-badge {
+  background: #ff4d4d;
+  color: #fff;
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 10px;
+  font-weight: bold;
+}
+
+/* ── MAIN LAYOUT CONTENT ── */
+.main-content {
+  flex: 1;
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* ── MODERN GLASS CARDS ── */
+.glass-card {
+  background: var(--bg-card);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--border-glass);
+  border-radius: 16px;
+  padding: 24px;
+  transition: var(--transition-smooth);
+}
+
+.glass-card:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+  transform: translateY(-2px);
+}
+
+/* ── BANNER SLIDER ANIMATION ── */
+.modern-slider {
+  position: relative;
+  height: 160px;
+  background: linear-gradient(135deg, #0f1e3d 0%, #070e22 100%);
+  border: 1px solid rgba(0, 210, 255, 0.2);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.slide-item {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transform: scale(0.97);
+  transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30px 40px;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.slide-item.active {
+  opacity: 1;
+  transform: scale(1);
+  z-index: 2;
+  pointer-events: auto;
+}
+
+.slide-content {
+  max-width: 70%;
+}
+
+.slide-tag {
+  background: rgba(255, 77, 77, 0.15);
+  color: var(--accent-color);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+  letter-spacing: 1px;
+  display: inline-block;
+  margin-bottom: 10px;
+}
+
+.slide-content h2 {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: #fff;
+}
+
+.slide-content p {
+  color: var(--text-muted);
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+
+.slide-meta {
+  font-size: 12px;
+  color: var(--text-muted);
+  display: flex;
+  gap: 10px;
+}
+
+.slide-meta strong {
+  color: var(--accent-color);
+}
+
+/* RADAR EFFECT VISUAL */
+.slide-visual {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.radar-pulse {
+  width: 30px;
+  height: 30px;
+  background: var(--accent-color);
+  border-radius: 50%;
+  position: relative;
+  box-shadow: 0 0 20px var(--accent-color);
+}
+
+.radar-pulse::before {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: inherit;
+  border-radius: 50%;
+  animation: pulse 2s infinite ease-out;
+}
+
+.slider-dots {
+  position: absolute;
+  bottom: 15px;
+  right: 40px;
+  display: flex;
+  gap: 8px;
+  z-index: 10;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.2);
+  border: none;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.dot.active {
+  background: var(--accent-cyan);
+  width: 24px;
+  border-radius: 4px;
+}
+
+/* ── METRIC CARDS GRID ── */
+.metrics-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.metric-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.metric-val {
+  font-size: 36px;
+  font-weight: 800;
+  margin-bottom: 5px;
+}
+
+.metric-lbl {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 500;
+  margin-bottom: 12px;
+}
+
+.metric-tag {
+  font-size: 11px;
+  font-weight: 600;
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+/* CARD ACCENT GLOWS */
+.card-red .metric-val { color: #ff4d4d; }
+.card-red .metric-tag { background: rgba(255,77,77,0.1); color: #ff4d4d; }
+.card-amber .metric-val { color: #ff9f43; }
+.card-amber .metric-tag { background: rgba(255,159,67,0.1); color: #ff9f43; }
+.card-green .metric-val { color: #1dd1a1; }
+.card-green .metric-tag { background: rgba(29,209,161,0.1); color: #1dd1a1; }
+.card-cyan .metric-val { color: var(--accent-cyan); }
+.card-cyan .metric-tag { background: rgba(0,210,255,0.1); color: var(--accent-cyan); }
+
+/* ── TWO COLUMN BLOCKS ── */
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 25px;
+}
+
+@media (max-width: 992px) {
+  .grid-2 { grid-template-columns: 1fr; }
+}
+
+.card-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 20px;
+  letter-spacing: 0.5px;
+}
+
+/* CHART LEGENDS */
+.legend-row {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 15px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+/* CAMERA DETECTIONS BLOCKS */
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.stat-box {
+  padding: 15px;
+  border-radius: 10px;
+  text-align: center;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.04);
+}
+
+.stat-box .stat-val { font-size: 22px; font-weight: 700; }
+.stat-box .stat-lbl { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+.s-red { color: #ff4d4d; border-color: rgba(255,77,77,0.15); }
+.s-amber { color: #ff9f43; border-color: rgba(255,159,67,0.15); }
+.s-yellow { color: #feca57; border-color: rgba(254,202,87,0.15); }
+.s-green { color: #1dd1a1; border-color: rgba(29,209,161,0.15); }
+
+/* MINI ALERT LOGS */
+.mini-alert-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mini-alert-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255,255,255,0.02);
+  padding: 10px 14px;
+  border-radius: 8px;
+  border-left: 3px solid rgba(255,255,255,0.1);
+}
+
+.alert-badge {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.mini-alert-text h6 { font-size: 13px; color: #fff; }
+.mini-alert-text p { font-size: 11px; color: var(--text-muted); }
+
+/* ── MODERN DATA TABLES ── */
+.table-responsive {
+  overflow-x: auto;
+}
+
+.queue-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 13px;
+}
+
+.queue-table th {
+  padding: 14px;
+  color: var(--text-muted);
+  font-weight: 600;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.queue-table td {
+  padding: 16px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  color: #cbd5e1;
+}
+
+.bold-text {
+  color: #fff !important;
+  font-weight: 500;
+}
+
+.team-tag {
+  background: rgba(0, 210, 255, 0.08);
+  color: var(--accent-cyan);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+}
+
+/* BADGES OPERASIONAL */
+.p-badge {
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: bold;
+}
+.p-p1 { background: rgba(255,77,77,0.15); color: #ff4d4d; }
+.p-p2 { background: rgba(255,159,67,0.15); color: #ff9f43; }
+.p-p3 { background: rgba(29,209,161,0.15); color: #1dd1a1; }
+
+.status-pill {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 500;
+}
+.pill-assigned { background: #1e293b; color: #94a3b8; }
+.pill-in_progress { background: rgba(0,210,255,0.15); color: var(--accent-cyan); }
+.pill-pending { background: rgba(254,202,87,0.15); color: #feca57; }
+
+/* ── INTERACTIVE ANIMATIONS ── */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 0.5; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+
+/* ==========================================================================
+   1. ATURAN DASAR & LAYOUT UTAMA (RESPONSIF DEFAULT)
+   ========================================================================== */
+:root {
+  --sidebar-width: 240px;
+}
+
+.dash-wrap {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: #0b132b; /* Tema premium navy */
+  color: #fff;
+  overflow-x: hidden;
+}
+
+.dash-body {
+  display: flex;
+  flex: 1;
+  width: 100%;
+  position: relative;
+}
+
+.main-content {
+  flex: 1;
+  padding: 24px;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Grid layout untuk Grafik & Kamerea (Desktop Default) */
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+  gap: 24px;
+}
+
+/* Baris kartu metrik default */
+.metrics-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+/* Responsive Table Container */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+
+/* ==========================================================================
+   2. MEDIA QUERY: LAPTOP KECIL & TABLET IPAD (max-width: 1024px)
+   ========================================================================== */
+@media screen and (max-width: 1024px) {
+  :root {
+    --sidebar-width: 70px; /* Mengecilkan sidebar menjadi mode ikon saja */
+  }
+
+  /* Sembunyikan teks menu sidebar, sisakan ikon/emoji */
+  .sidebar {
+    width: var(--sidebar-width);
+    padding: 15px 8px;
+    align-items: center;
+  }
+
+  .nav-item {
+    justify-content: center;
+    font-size: 0; /* Menyembunyikan teks */
+    padding: 12px;
+    width: 45px;
+    height: 45px;
+    border-radius: 10px;
+  }
+
+  /* Tetap tampilkan emoji/ikon di dalam menu */
+  .nav-item::before, 
+  .nav-item h5,
+  .nav-badge {
+    font-size: 16px !important;
+  }
+  
+  .nav-badge {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+  }
+
+  .grid-2 {
+    grid-template-columns: 1fr; /* Grafik dan Panel kamera bertumpuk vertikal */
+  }
+}
+
+/* ==========================================================================
+   FLOATING AI CHATBOT SYSTEM (PREMIUM CYBER NAVY)
+   ========================================================================== */
+.ai-chat-wrapper {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* TOMBOL PEMICU UTAMA (MELAYANG) */
+.chat-trigger-btn {
+  background: linear-gradient(135deg, #00d2ff 0%, #0077b6 100%);
+  border: none;
+  border-radius: 30px;
+  padding: 12px 20px;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  box-shadow: 0 8px 25px rgba(0, 210, 255, 0.4);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.chat-trigger-btn:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 12px 30px rgba(0, 210, 255, 0.6);
+}
+
+.chat-icon {
+  font-size: 18px;
+}
+
+/* JENDELA JELAJAH PERCAKAPAN CHAT */
+.chat-window {
+  width: 360px;
+  max-width: calc(100vw - 48px);
+  height: 460px;
+  background: rgba(11, 19, 43, 0.95);
+  border: 1px solid rgba(0, 210, 255, 0.3);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  backdrop-filter: blur(16px);
+  animation: chat-appear 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* HEADER CHAT */
+.chat-header {
+  background: rgba(15, 23, 42, 0.9);
+  padding: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.chat-header-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chat-header-title h6 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+}
+
+.bot-status-dot {
+  width: 8px;
+  height: 8px;
+  background-color: #1dd1a1; /* Indikator online hijau */
+  border-radius: 50%;
+  box-shadow: 0 0 8px #1dd1a1;
+}
+
+.btn-close-chat {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  font-size: 24px;
+  cursor: pointer;
+  line-height: 1;
+  transition: color 0.2s;
+}
+
+.btn-close-chat:hover {
+  color: #ff4d4d;
+}
+
+/* AREA ISI BALON PESAN */
+.chat-messages-box {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Kustomisasi scrollbar mini untuk box chat */
+.chat-messages-box::-webkit-scrollbar {
+  width: 4px;
+}
+.chat-messages-box::-webkit-scrollbar-thumb {
+  background: rgba(0, 210, 255, 0.2);
+  border-radius: 4px;
+}
+
+.chat-bubble {
+  max-width: 80%;
+  padding: 12px 14px;
+  border-radius: 16px;
+  font-size: 13px;
+  line-height: 1.4;
+  word-wrap: break-word;
+}
+
+.chat-bubble.bot {
+  background: rgba(30, 41, 59, 0.6);
+  color: #e2e8f0;
+  align-self: flex-start;
+  border-bottom-left-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.chat-bubble.user {
+  background: rgba(0, 210, 255, 0.15);
+  color: #00d2ff;
+  align-self: flex-end;
+  border-bottom-right-radius: 4px;
+  border: 1px solid rgba(0, 210, 255, 0.2);
+}
+
+/* AREA INPUT KETIK PESAN */
+.chat-input-area {
+  padding: 12px 16px;
+  background: rgba(15, 23, 42, 0.6);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  gap: 8px;
+}
+
+.chat-input-area input {
+  flex: 1;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 10px 12px;
+  color: #ffffff;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.chat-input-area input:focus {
+  border-color: #00d2ff;
+}
+
+.chat-input-area input::placeholder {
+  color: #475569;
+}
+
+.btn-send-chat {
+  background: rgba(0, 210, 255, 0.1);
+  border: 1px solid rgba(0, 210, 255, 0.3);
+  border-radius: 10px;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-send-chat:hover {
+  background: #00d2ff;
+  transform: scale(1.05);
+}
+
+/* ANIMASI MUNCUL */
+@keyframes chat-appear {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* RESPONSIVE UNTUK LAYAR MOBILE */
+@media screen and (max-width: 480px) {
+  .ai-chat-wrapper {
+    bottom: 16px;
+    right: 16px;
+  }
+  .chat-window {
+    height: 400px;
+  }
+  .chat-trigger-btn {
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+}
+/* ==========================================================================
+   3. MEDIA QUERY: TABLET PORTRAIT & MOBILE BESAR (max-width: 768px)
+   ========================================================================== */
+@media screen and (max-width: 768px) {
+  .dash-body {
+    flex-direction: column; /* Sidebar pindah ke bawah atau diatur sebagai top-nav/bottom-nav */
+  }
+
+  /* Mengubah Sidebar menjadi Menu Horisontal di bawah Topbar untuk menghemat ruang */
+  .sidebar {
+    width: 100%;
+    height: auto;
+    flex-direction: row;
+    justify-content: space-around;
+    padding: 10px;
+    background: rgba(15, 23, 42, 0.95);
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 99;
+  }
+
+  .nav-item {
+    font-size: 11px; /* Tampilkan teks kecil kembali untuk navigasi bawah */
+    flex-direction: column;
+    gap: 4px;
+    height: auto;
+    width: auto;
+    padding: 8px;
+  }
+
+  .main-content {
+    padding: 16px;
+    gap: 16px;
+  }
+
+  /* Format Metrik menjadi 2 kolom */
+  .metrics-row {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .metric-card {
+    padding: 16px;
+  }
+
+  .metric-val {
+    font-size: 1.8rem;
+  }
+
+  /* Menyesuaikan tinggi slider info banjiran */
+  .modern-slider {
+    height: auto;
+    min-height: 180px;
+  }
+
+  .slide-item {
+    flex-direction: column;
+    padding: 16px;
+  }
+
+  .slide-visual {
+    display: none; /* Sembunyikan radar pulse di mobile untuk menghemat ruang vertikal */
+  }
+}
+
+
+/* ==========================================================================
+   4. MEDIA QUERY: SMARTPHONE (iPhone 13/14/15, Pro Max, Galaxy S Series - max-width: 480px)
+   ========================================================================== */
+@media screen and (max-width: 480px) {
+  /* Topbar adjustment */
+  .topbar {
+    padding: 10px 16px;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+  }
+
+  .topbar-right {
+    width: 100%;
+    justify-content: space-between;
+    font-size: 12px;
+  }
+
+  .btn-upload {
+    padding: 6px 12px;
+    font-size: 11px;
+  }
+
+  /* Banner Slider Text */
+  .slide-content h2 {
+    font-size: 14px;
+    line-height: 1.4;
+  }
+
+  .slide-content p {
+    font-size: 12px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2; /* Batasi maksimal 2 baris pesan di hp kecil */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* Metrik menjadi 1 kolom penuh agar tulisan tidak kepotong */
+  .metrics-row {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  /* Grid Kamera dan Grafik */
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important; /* Kotak statistik kamera (Parah, Bersih, dll) jadi 2x2 */
+    gap: 10px;
+  }
+
+  /* Penyesuaian Legend Chart di bawah Recharts Grafik */
+  .legend-row {
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+  }
+
+  .legend-item {
+    font-size: 11px;
+  }
+
+  /* Mengurangi padding card bawaan */
+  .card {
+    padding: 14px;
+  }
+
+  .card-title {
+    font-size: 13px;
+  }
+}
+
+/* ==========================================================================
+   5. MEDIA QUERY: SCREEN SANGAT KECIL (iPhone SE, Mini Series - max-width: 360px)
+   ========================================================================== */
+@media screen and (max-width: 360px) {
+  .topbar-title {
+    font-size: 14px;
+  }
+  
+  .topbar-sub {
+    display: none; /* Sembunyikan sub-title dinas DLH jika layar terlalu sempit */
+  }
+
+  .metrics-row {
+    grid-template-columns: 1fr;
+  }
+}

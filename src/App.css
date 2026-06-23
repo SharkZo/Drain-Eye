@@ -1,0 +1,27 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #f0f4f8;
+  color: #1a202c;
+}
+
+:root {
+  --blue-primary: #1F4E79;
+  --blue-light: #2E74B5;
+  --blue-bg: #E6F1FB;
+  --red: #E24B4A;
+  --red-bg: #FCEBEB;
+  --amber: #EF9F27;
+  --amber-bg: #FAEEDA;
+  --green: #3B6D11;
+  --green-bg: #EAF3DE;
+  --gray-bg: #f0f4f8;
+  --white: #ffffff;
+  --border: #e2e8f0;
+  --text-secondary: #64748b;
+}
