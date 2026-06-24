@@ -1,0 +1,208 @@
+import { useState, useEffect } from 'react'
+import axios from 'axios'
+import './Laporan.css'
+
+const API = 'https://drain-eye-production.up.railway.app'
+
+const RISK_LABELS = {
+  low:      { label: 'Rendah',  color: '#27500A', bg: '#EAF3DE' },
+  moderate: { label: 'Sedang',  color: '#633806', bg: '#FAEEDA' },
+  high:     { label: 'Tinggi',  color: '#A32D2D', bg: '#FCEBEB' },
+  critical: { label: 'Kritis',  color: '#7B1D1D', bg: '#FEE2E2' },
+}
+
+export default function Laporan() {
+  const [history, setHistory]     = useState([])
+  const [riskData, setRiskData]   = useState([])
+  const [loading, setLoading]     = useState(true)
+  const [generating, setGenerating] = useState(false)
+  const [generated, setGenerated] = useState(false)
+
+  useEffect(() => {
+    Promise.all([
+      axios.get(`${API}/api/detection/history`),
+      axios.get(`${API}/api/risk/all`)
+    ]).then(([h, r]) => {
+      setHistory(h.data.data || [])
+      setRiskData(r.data.data || [])
+    }).catch(() => {}).finally(() => setLoading(false))
+  }, [])
+
+  const today = new Date().toLocaleDateString('id-ID', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+  })
+
+  const stats = {
+    total:    history.length,
+    critical: history.filter(h => h.risk_level === 'critical').length,
+    high:     history.filter(h => h.risk_level === 'high').length,
+    handled:  history.filter(h => h.status === 'handled').length,
+    pending:  history.filter(h => h.status === 'pending').length,
+    avgBlockage: history.length > 0
+      ? (history.reduce((a, b) => a + b.blockage_percentage, 0) / history.length).toFixed(1)
+      : 0
+  }
+
+  const handleGenerate = () => {
+    setGenerating(true)
+    setTimeout(() => {
+      setGenerating(false)
+      setGenerated(true)
+      // trigger print
+      window.print()
+    }, 1500)
+  }
+
+  return (
+    <div className="lap-wrap">
+      <header className="lap-topbar">
+        <a href="/" className="lap-back">← Kembali</a>
+        <span className="lap-title">📄 Laporan Harian</span>
+        <button
+          className={`btn-generate ${generating ? 'loading' : ''}`}
+          onClick={handleGenerate}
+          disabled={generating}
+        >
+          {generating ? '⏳ Generating...' : '🖨️ Cetak / Export PDF'}
+        </button>
+      </header>
+
+      <div className="lap-body" id="laporan-print">
+
+        {/* HEADER LAPORAN */}
+        <div className="lap-header-doc">
+          <div className="lap-logo">💧</div>
+          <div>
+            <div className="lap-doc-title">LAPORAN HARIAN DRAIN-EYE</div>
+            <div className="lap-doc-subtitle">Sistem Deteksi Sumbatan Drainase & Skoring Risiko Banjir</div>
+            <div className="lap-doc-sub2">Dinas Lingkungan Hidup DKI Jakarta</div>
+          </div>
+          <div className="lap-date-box">
+            <div className="lap-date-label">Tanggal Laporan</div>
+            <div className="lap-date-val">{today}</div>
+          </div>
+        </div>
+
+        {/* RINGKASAN EKSEKUTIF */}
+        <div className="lap-section">
+          <div className="lap-section-title">📊 Ringkasan Eksekutif</div>
+          <div className="lap-stats-grid">
+            <div className="lap-stat">
+              <div className="lap-stat-val red">{stats.total}</div>
+              <div className="lap-stat-lbl">Total Laporan</div>
+            </div>
+            <div className="lap-stat">
+              <div className="lap-stat-val red">{stats.critical}</div>
+              <div className="lap-stat-lbl">Risiko Kritis</div>
+            </div>
+            <div className="lap-stat">
+              <div className="lap-stat-val amber">{stats.high}</div>
+              <div className="lap-stat-lbl">Risiko Tinggi</div>
+            </div>
+            <div className="lap-stat">
+              <div className="lap-stat-val green">{stats.handled}</div>
+              <div className="lap-stat-lbl">Sudah Ditangani</div>
+            </div>
+            <div className="lap-stat">
+              <div className="lap-stat-val amber">{stats.pending}</div>
+              <div className="lap-stat-lbl">Menunggu</div>
+            </div>
+            <div className="lap-stat">
+              <div className="lap-stat-val blue">{stats.avgBlockage}%</div>
+              <div className="lap-stat-lbl">Rata-rata Sumbatan</div>
+            </div>
+          </div>
+        </div>
+
+        {/* RISK SCORE KELURAHAN */}
+        {riskData.length > 0 && (
+          <div className="lap-section">
+            <div className="lap-section-title">🗺️ Risk Score per Kelurahan (Real-time)</div>
+            <table className="lap-table">
+              <thead>
+                <tr>
+                  <th>No</th>
+                  <th>Kelurahan</th>
+                  <th>Risk Score</th>
+                  <th>Level Risiko</th>
+                  <th>Rekomendasi</th>
+                </tr>
+              </thead>
+              <tbody>
+                {riskData.map((r, i) => (
+                  <tr key={i}>
+                    <td>{i + 1}</td>
+                    <td>{r.kelurahan}</td>
+                    <td><strong>{r.risk_score}/100</strong></td>
+                    <td>
+                      <span className="risk-pill" style={{
+                        background: RISK_LABELS[r.risk_level]?.bg,
+                        color: RISK_LABELS[r.risk_level]?.color
+                      }}>
+                        {RISK_LABELS[r.risk_level]?.label}
+                      </span>
+                    </td>
+                    <td className="rec-cell">
+                      {r.risk_level === 'critical' ? '🚨 Pengerahan segera' :
+                       r.risk_level === 'high'     ? '🔴 Prioritas tinggi'  :
+                       r.risk_level === 'moderate' ? '🟠 Monitor aktif'     :
+                                                     '🟢 Pantau rutin'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* RIWAYAT DETEKSI */}
+        {history.length > 0 && (
+          <div className="lap-section">
+            <div className="lap-section-title">📋 Riwayat Deteksi Hari Ini</div>
+            <table className="lap-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Kelurahan</th>
+                  <th>Sumbatan</th>
+                  <th>Level</th>
+                  <th>Status</th>
+                  <th>Waktu</th>
+                </tr>
+              </thead>
+              <tbody>
+                {history.slice(0, 10).map((h, i) => (
+                  <tr key={i}>
+                    <td>#{h.id}</td>
+                    <td>{h.kelurahan}, {h.kecamatan}</td>
+                    <td>{h.blockage_percentage}%</td>
+                    <td>
+                      <span className="risk-pill" style={{
+                        background: RISK_LABELS[h.risk_level]?.bg,
+                        color: RISK_LABELS[h.risk_level]?.color
+                      }}>
+                        {RISK_LABELS[h.risk_level]?.label}
+                      </span>
+                    </td>
+                    <td>{h.status === 'handled' ? '✅ Ditangani' : '⏳ Pending'}</td>
+                    <td>{new Date(h.timestamp).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {history.length > 10 && (
+              <div className="lap-note">* Menampilkan 10 dari {history.length} laporan. Cetak untuk melihat semua.</div>
+            )}
+          </div>
+        )}
+
+        {/* FOOTER */}
+        <div className="lap-footer">
+          <div>Digenerate oleh sistem DRAIN-EYE — AI-powered Drainage Monitoring System</div>
+          <div>© 2026 Dinas Lingkungan Hidup DKI Jakarta | drain-eye-tbnt.vercel.app</div>
+        </div>
+
+      </div>
+    </div>
+  )
+}

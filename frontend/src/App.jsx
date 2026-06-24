@@ -5,6 +5,7 @@ import History from './pages/History'
 import Alert from './pages/Alert'
 import './App.css'
 import Analitik from './pages/Analitik'
+import Laporan from './pages/Laporan'
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
         <Route path="/history" element={<History />} />
         <Route path="/alert" element={<Alert />} />
         <Route path="/analitik" element={<Analitik />} />
+        <Route path="/laporan" element={<Laporan />} />
       </Routes>
     </BrowserRouter>
   )

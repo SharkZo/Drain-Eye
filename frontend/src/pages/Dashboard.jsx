@@ -88,7 +88,7 @@ export default function Dashboard() {
           <a href="/history" className="nav-item">🕐 Riwayat</a>
           <a href="/alert" className="nav-item">🔔 Alert <span className="nav-badge">3</span></a>
           <a href="/analitik" className="nav-item">📈 Analitik</a>
-          <div className="nav-item">📄 Laporan</div>
+          <a href="/laporan" className="nav-item">📄 Laporan</a>
         </nav>
 
         {/* ── MAIN CONTENT ── */}
