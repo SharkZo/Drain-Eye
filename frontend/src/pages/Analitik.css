@@ -1,0 +1,25 @@
+.ana-wrap { min-height: 100vh; background: #f0f4f8; display: flex; flex-direction: column; }
+
+.ana-topbar { background: #1F4E79; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; }
+.ana-back { color: #B5D4F4; font-size: 13px; text-decoration: none; }
+.ana-back:hover { color: #E6F1FB; }
+.ana-title { color: #E6F1FB; font-size: 15px; font-weight: 600; }
+.ana-sub { color: #93C5E8; font-size: 12px; }
+
+.ana-body { max-width: 900px; margin: 0 auto; padding: 20px 16px; width: 100%; display: flex; flex-direction: column; gap: 16px; }
+
+.ana-summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.ana-card { background: #fff; border-radius: 10px; padding: 14px 16px; border: 1px solid #e2e8f0; }
+.ana-val { font-size: 26px; font-weight: 600; line-height: 1.1; }
+.ana-val.red { color: #A32D2D; }
+.ana-val.amber { color: #633806; }
+.ana-val.green { color: #27500A; }
+.ana-val.blue { color: #1F4E79; }
+.ana-lbl { font-size: 11px; color: #64748b; margin-top: 4px; }
+
+.chart-card { background: #fff; border-radius: 10px; padding: 16px; border: 1px solid #e2e8f0; }
+.chart-title { font-size: 13px; font-weight: 600; color: #1F4E79; margin-bottom: 14px; }
+
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+.legend-row { display: flex; align-items: center; gap: 12px; margin-top: 10px; flex-wrap: wrap; }
