@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import './Alert.css'
+import Navbar from '../components/Navbar'
 
 const API = 'https://drain-eye-production.up.railway.app'
 
@@ -112,11 +113,7 @@ export default function Alert() {
 
   return (
     <div className="alert-wrap">
-      <header className="alert-topbar">
-        <a href="/" className="alert-back">← Kembali</a>
-        <span className="alert-title">🔔 Pusat Alert</span>
-        <span className="alert-count">{unreadCount} belum dibaca</span>
-      </header>
+      <Navbar title="Pusat Alert" backHref="/" />
 
       <div className="alert-body">
 

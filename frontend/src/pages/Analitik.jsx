@@ -5,6 +5,7 @@ import {
   Tooltip, Legend, ResponsiveContainer, Cell, PieChart, Pie
 } from 'recharts'
 import './Analitik.css'
+import Navbar from '../components/Navbar'
 
 const API = 'https://drain-eye-production.up.railway.app'
 
@@ -45,11 +46,7 @@ export default function Analitik() {
 
   return (
     <div className="ana-wrap">
-      <header className="ana-topbar">
-        <a href="/" className="ana-back">← Kembali</a>
-        <span className="ana-title">📈 Analitik</span>
-        <span className="ana-sub">Data 7 hari terakhir</span>
-      </header>
+      <Navbar title="Analitik" backHref="/" />
 
       <div className="ana-body">
 

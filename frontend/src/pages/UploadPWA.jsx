@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import axios from 'axios'
 import './UploadPWA.css'
+import Navbar from '../components/Navbar'
 
 const API = 'http://127.0.0.1:8000'
 

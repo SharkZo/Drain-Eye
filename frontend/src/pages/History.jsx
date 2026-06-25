@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import './History.css'
+import Navbar from '../components/Navbar'
 
 const API = 'https://drain-eye-production.up.railway.app'
 
@@ -77,11 +78,7 @@ export default function History() {
   return (
     <div className="hist-wrap">
 
-      <header className="hist-topbar">
-        <a href="/upload" className="hist-back">← Kembali</a>
-        <span className="hist-title">💧 Riwayat Laporan</span>
-        <span className="hist-count">{history.length} laporan</span>
-      </header>
+     <Navbar title="Riwayat Laporan" backHref="/upload" />
 
       <div className="hist-body">
 

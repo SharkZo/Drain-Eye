@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import './Laporan.css'
+import Navbar from '../components/Navbar'
 
 const API = 'https://drain-eye-production.up.railway.app'
 
@@ -55,17 +56,7 @@ export default function Laporan() {
 
   return (
     <div className="lap-wrap">
-      <header className="lap-topbar">
-        <a href="/" className="lap-back">← Kembali</a>
-        <span className="lap-title">📄 Laporan Harian</span>
-        <button
-          className={`btn-generate ${generating ? 'loading' : ''}`}
-          onClick={handleGenerate}
-          disabled={generating}
-        >
-          {generating ? '⏳ Generating...' : '🖨️ Cetak / Export PDF'}
-        </button>
-      </header>
+      <Navbar title="Laporan Harian" backHref="/" />
 
       <div className="lap-body" id="laporan-print">
 

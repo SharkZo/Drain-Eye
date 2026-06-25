@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 import './Dashboard.css'
+import Navbar from '../components/Navbar'
 
 const API = 'https://drain-eye-production.up.railway.app'
 
@@ -67,17 +68,7 @@ export default function Dashboard() {
     <div className="dash-wrap">
 
       {/* ── TOPBAR ── */}
-      <header className="topbar">
-        <div className="topbar-left">
-          <span className="topbar-logo">💧</span>
-          <span className="topbar-title">DRAIN-EYE</span>
-          <span className="topbar-sub">Dashboard DLH DKI Jakarta</span>
-        </div>
-        <div className="topbar-right">
-          <span className="topbar-time">🕐 {fmtTime(time)} WIB</span>
-          <a href="/upload" className="btn-upload">+ Laporan Baru</a>
-        </div>
-      </header>
+      <Navbar title="Dashboard DLH DKI Jakarta" />
 
       <div className="dash-body">
 
