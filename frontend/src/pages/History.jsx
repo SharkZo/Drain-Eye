@@ -78,7 +78,7 @@ export default function History() {
     <div className="hist-wrap">
 
       <header className="hist-topbar">
-        <a href="/" className="hist-back">← Kembali</a>
+        <a href="/upload" className="hist-back">← Kembali</a>
         <span className="hist-title">💧 Riwayat Laporan</span>
         <span className="hist-count">{history.length} laporan</span>
       </header>

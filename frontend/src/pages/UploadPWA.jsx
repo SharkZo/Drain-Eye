@@ -2,7 +2,7 @@ import { useState } from 'react'
 import axios from 'axios'
 import './UploadPWA.css'
 
-const API = 'https://drain-eye-production.up.railway.app'
+const API = 'http://127.0.0.1:8000'
 
 const SEVERITY_LABELS = {
   clear:             { label: 'Bersih',          color: '#27500A', bg: '#EAF3DE' },
@@ -81,7 +81,7 @@ export default function UploadPWA() {
 
       {/* TOPBAR */}
       <header className="pwa-topbar">
-        <a href="/" className="pwa-back">← Kembali</a>
+        <a href="/history" className="pwa-back">← Kembali</a>
         <span className="pwa-title">💧 DRAIN-EYE</span>
         <span />
       </header>
