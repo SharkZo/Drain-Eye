@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
-import './Alert.css'
 import Navbar from '../components/Navbar'
+import './Alert.css'
 
 const API = 'https://drain-eye-production.up.railway.app'
 
@@ -12,78 +12,73 @@ const RISK_LABELS = {
   critical: { label: 'Kritis',  color: '#7B1D1D', bg: '#FEE2E2', icon: '🚨' },
 }
 
-// dummy alerts — nanti bisa disambung ke backend
 const DUMMY_ALERTS = [
   {
-    id: 'ALT001',
-    kelurahan: 'Pluit',
-    kecamatan: 'Penjaringan',
-    risk_score: 91,
-    risk_level: 'critical',
+    id: 'ALT001', kelurahan: 'Pluit', kecamatan: 'Penjaringan',
+    risk_score: 91, risk_level: 'critical',
     message: 'Risiko banjir kritis — 3 titik drainase tersumbat parah terdeteksi',
     triggered_at: new Date(Date.now() - 25 * 60000).toISOString(),
-    is_acknowledged: false,
-    blockage_pct: 89.1
+    is_acknowledged: false, blockage_pct: 89.1
   },
   {
-    id: 'ALT002',
-    kelurahan: 'Koja',
-    kecamatan: 'Koja',
-    risk_score: 84,
-    risk_level: 'critical',
+    id: 'ALT002', kelurahan: 'Koja', kecamatan: 'Koja',
+    risk_score: 84, risk_level: 'critical',
     message: 'Drainase 84% tersumbat — 4 laporan warga masuk dalam 1 jam terakhir',
     triggered_at: new Date(Date.now() - 52 * 60000).toISOString(),
-    is_acknowledged: false,
-    blockage_pct: 84.3
+    is_acknowledged: false, blockage_pct: 84.3
   },
   {
-    id: 'ALT003',
-    kelurahan: 'Tambora',
-    kecamatan: 'Tambora',
-    risk_score: 72,
-    risk_level: 'high',
+    id: 'ALT003', kelurahan: 'Tambora', kecamatan: 'Tambora',
+    risk_score: 72, risk_level: 'high',
     message: 'Prakiraan hujan lebat 48 jam ke depan — risiko banjir meningkat signifikan',
     triggered_at: new Date(Date.now() - 90 * 60000).toISOString(),
-    is_acknowledged: false,
-    blockage_pct: 65.7
+    is_acknowledged: false, blockage_pct: 65.7
   },
   {
-    id: 'ALT004',
-    kelurahan: 'Cilincing',
-    kecamatan: 'Cilincing',
-    risk_score: 65,
-    risk_level: 'high',
+    id: 'ALT004', kelurahan: 'Cilincing', kecamatan: 'Cilincing',
+    risk_score: 65, risk_level: 'high',
     message: 'Sumbatan drainase pasar meningkat 30% dalam 6 jam terakhir',
     triggered_at: new Date(Date.now() - 3 * 3600000).toISOString(),
-    is_acknowledged: true,
-    blockage_pct: 61.7
+    is_acknowledged: true, blockage_pct: 61.7
   },
   {
-    id: 'ALT005',
-    kelurahan: 'Palmerah',
-    kecamatan: 'Palmerah',
-    risk_score: 58,
-    risk_level: 'high',
+    id: 'ALT005', kelurahan: 'Palmerah', kecamatan: 'Palmerah',
+    risk_score: 58, risk_level: 'high',
     message: 'Titik drainase baru terdeteksi tersumbat di Jl. Palmerah Selatan',
     triggered_at: new Date(Date.now() - 5 * 3600000).toISOString(),
-    is_acknowledged: true,
-    blockage_pct: 57.3
+    is_acknowledged: true, blockage_pct: 57.3
   },
 ]
+
+function SkeletonAlert() {
+  return (
+    <div className="alert-item skeleton-alert">
+      <div className="skel-line w40" style={{ height: 16 }}></div>
+      <div className="skel-line w90" style={{ height: 12 }}></div>
+      <div className="skel-line w30" style={{ height: 10 }}></div>
+    </div>
+  )
+}
 
 export default function Alert() {
   const [alerts, setAlerts]         = useState(DUMMY_ALERTS)
   const [riskData, setRiskData]     = useState([])
   const [filter, setFilter]         = useState('all')
   const [loading, setLoading]       = useState(true)
+  const [loadError, setLoadError]   = useState(false)
 
   useEffect(() => {
-    // fetch risk score dari backend
+    fetchRisk()
+  }, [])
+
+  const fetchRisk = () => {
+    setLoading(true)
+    setLoadError(false)
     axios.get(`${API}/api/risk/all`)
       .then(r => setRiskData(r.data.data || []))
-      .catch(() => {})
+      .catch(() => setLoadError(true))
       .finally(() => setLoading(false))
-  }, [])
+  }
 
   const acknowledge = (id) => {
     setAlerts(prev => prev.map(a =>
@@ -117,7 +112,6 @@ export default function Alert() {
 
       <div className="alert-body">
 
-        {/* SUMMARY CARDS */}
         <div className="alert-summary">
           <div className="ascard critical">
             <div className="ascard-val">{alerts.filter(a => a.risk_level === 'critical').length}</div>
@@ -138,9 +132,29 @@ export default function Alert() {
         </div>
 
         {/* RISK SCORE DARI LSTM */}
-        {!loading && riskData.length > 0 && (
-          <div className="risk-section">
-            <div className="section-title">📊 Risk Score Real-time per Kelurahan</div>
+        <div className="risk-section">
+          <div className="section-title">📊 Risk Score Real-time per Kelurahan</div>
+
+          {loading && (
+            <div className="risk-grid">
+              {[1,2,3,4,5,6].map(i => (
+                <div key={i} className="risk-card skeleton-risk"></div>
+              ))}
+            </div>
+          )}
+
+          {!loading && loadError && (
+            <div className="risk-error">
+              <span>⚠️ Gagal memuat data risk score dari server.</span>
+              <button className="btn-retry-sm" onClick={fetchRisk}>🔄 Coba Lagi</button>
+            </div>
+          )}
+
+          {!loading && !loadError && riskData.length === 0 && (
+            <div className="empty-state-sm">Belum ada data risk score tersedia.</div>
+          )}
+
+          {!loading && !loadError && riskData.length > 0 && (
             <div className="risk-grid">
               {riskData.slice(0, 6).map((r, i) => (
                 <div key={i} className="risk-card" style={{
@@ -159,8 +173,8 @@ export default function Alert() {
                 </div>
               ))}
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* FILTER & ACTIONS */}
         <div className="alert-controls">

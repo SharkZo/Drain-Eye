@@ -65,3 +65,37 @@
 .status-assigned { background: #E6F1FB; color: #1F4E79; }
 .status-in_progress { background: #FAEEDA; color: #633806; }
 .status-pending { background: #f1f5f9; color: #64748b; }
+
+/* CONNECTION ERROR BANNER */
+.conn-error-banner { background: #FAEEDA; color: #633806; border: 1px solid #F5C842; border-radius: 8px; padding: 10px 14px; font-size: 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.btn-retry-inline { background: #633806; color: #fff; border: none; border-radius: 6px; padding: 5px 12px; font-size: 11px; cursor: pointer; font-family: inherit; flex-shrink: 0; }
+.btn-retry-inline:hover { background: #4a2a04; }
+
+/* SKELETON LOADING */
+.skeleton-card { background: #f8fafc; }
+.skel-line { background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 4px; height: 14px; margin-bottom: 8px; }
+.skel-line.w60 { width: 60%; height: 24px; }
+.skel-line.w80 { width: 80%; }
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+.skeleton-stat { background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; height: 56px; }
+
+/* EMPTY STATE */
+.empty-state-sm { text-align: center; padding: 24px 12px; color: #94a3b8; font-size: 12px; }
+
+/* TABLE SCROLL FOR MOBILE */
+.table-scroll { overflow-x: auto; }
+
+/* MOBILE RESPONSIVE */
+@media (max-width: 900px) {
+  .dash-body { flex-direction: column; }
+  .sidebar { width: 100%; flex-direction: row; overflow-x: auto; padding: 8px; gap: 4px; }
+  .nav-item { white-space: nowrap; border-right: none !important; border-bottom: 3px solid transparent; }
+  .nav-item.active { border-bottom: 3px solid #1F4E79; }
+  .metrics-row { grid-template-columns: repeat(2, 1fr); }
+  .grid-2 { grid-template-columns: 1fr; }
+  .queue-table { min-width: 500px; }
+}
+
+@media (max-width: 480px) {
+  .metrics-row { grid-template-columns: 1fr; }
+}
