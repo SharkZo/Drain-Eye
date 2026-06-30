@@ -20,14 +20,28 @@ const RISK_LABELS = {
   critical: { label: 'Kritis',  color: '#7B1D1D', bg: '#FEE2E2' },
 }
 
+function SkeletonItem() {
+  return (
+    <div className="hist-item skeleton-hist">
+      <div className="skel-circle"></div>
+      <div style={{ flex: 1 }}>
+        <div className="skel-line w50" style={{ height: 13, marginBottom: 6 }}></div>
+        <div className="skel-line w30" style={{ height: 10 }}></div>
+      </div>
+    </div>
+  )
+}
+
 export default function History() {
   const { user, isDLH } = useAuth()
 
-  const [history, setHistory]   = useState([])
-  const [loading, setLoading]   = useState(true)
-  const [filter, setFilter]     = useState('all')
-  const [search, setSearch]     = useState('')
-  const [selected, setSelected] = useState(null)
+  const [history, setHistory]     = useState([])
+  const [loading, setLoading]     = useState(true)
+  const [loadError, setLoadError] = useState(false)
+  const [filter, setFilter]       = useState('all')
+  const [search, setSearch]       = useState('')
+  const [selected, setSelected]   = useState(null)
+  const [actionLoadingId, setActionLoadingId] = useState(null)
 
   useEffect(() => {
     if (user) fetchHistory()
@@ -35,6 +49,7 @@ export default function History() {
 
   const fetchHistory = async () => {
     setLoading(true)
+    setLoadError(false)
     try {
       const url = isDLH
         ? `${API}/api/detection/history`
@@ -42,7 +57,7 @@ export default function History() {
       const res = await axios.get(url)
       setHistory(res.data.data || [])
     } catch (err) {
-      console.error('Gagal fetch riwayat:', err)
+      setLoadError(true)
       setHistory([])
     } finally {
       setLoading(false)
@@ -50,11 +65,14 @@ export default function History() {
   }
 
   const markAsHandled = async (id) => {
+    setActionLoadingId(id)
     try {
       await axios.patch(`${API}/api/detection/history/${id}/handled`)
-      fetchHistory()
+      await fetchHistory()
     } catch (err) {
-      console.error('Gagal update status:', err)
+      alert('Gagal update status. Coba lagi.')
+    } finally {
+      setActionLoadingId(null)
     }
   }
 
@@ -83,7 +101,6 @@ export default function History() {
 
   return (
     <div className="hist-wrap">
-
       <Navbar title={isDLH ? "Semua Laporan Warga" : "Riwayat Laporan Saya"} backHref={isDLH ? "/" : "/upload"} />
 
       <div className="hist-body">
@@ -117,6 +134,7 @@ export default function History() {
             placeholder="🔍 Cari kelurahan atau kecamatan..."
             value={search}
             onChange={e => setSearch(e.target.value)}
+            disabled={loading}
           />
           <div className="filter-row">
             {['all','critical','high','moderate','low','handled','pending'].map(f => (
@@ -138,16 +156,28 @@ export default function History() {
 
         <div className="hist-list">
           {loading && (
-            <div className="hist-empty">⏳ Memuat riwayat...</div>
+            <>
+              <SkeletonItem /><SkeletonItem /><SkeletonItem />
+            </>
           )}
-          {!loading && filtered.length === 0 && (
-            <div className="hist-empty">
-              {history.length === 0
-                ? '📭 Belum ada laporan. Upload foto drainase pertamamu!'
-                : 'Tidak ada laporan yang sesuai filter'}
+
+          {!loading && loadError && (
+            <div className="hist-error">
+              <span style={{ fontSize: 28 }}>⚠️</span>
+              <span>Gagal memuat riwayat. Periksa koneksi internet kamu.</span>
+              <button className="btn-retry-sm" onClick={fetchHistory}>🔄 Coba Lagi</button>
             </div>
           )}
-          {!loading && filtered.map(h => (
+
+          {!loading && !loadError && filtered.length === 0 && (
+            <div className="hist-empty">
+              {history.length === 0
+                ? (isDLH ? '📭 Belum ada laporan masuk dari warga.' : '📭 Belum ada laporan. Upload foto drainase pertamamu!')
+                : 'Tidak ada laporan yang sesuai filter pencarian.'}
+            </div>
+          )}
+
+          {!loading && !loadError && filtered.map(h => (
             <div
               key={h.id}
               className={`hist-item ${selected?.id === h.id ? 'selected' : ''}`}
@@ -160,7 +190,7 @@ export default function History() {
                 <div className="hist-item-info">
                   <div className="hist-item-loc">
                     {h.kelurahan}, {h.kecamatan}
-                    {isDLH && h.user_email && <span style={{ fontSize: 11, color: '#94a3b8', marginLeft: 6 }}>oleh {h.user_email}</span>}
+                    {isDLH && h.user_email && <span className="reporter-tag">oleh {h.user_email}</span>}
                   </div>
                   <div className="hist-item-time">{fmtDate(h.timestamp)} • {fmtTime(h.timestamp)}</div>
                 </div>
@@ -214,8 +244,9 @@ export default function History() {
                     <button
                       className="btn-handled"
                       onClick={(e) => { e.stopPropagation(); markAsHandled(h.id); }}
+                      disabled={actionLoadingId === h.id}
                     >
-                      ✅ Tandai Sudah Ditangani
+                      {actionLoadingId === h.id ? '⏳ Memproses...' : '✅ Tandai Sudah Ditangani'}
                     </button>
                   )}
                 </div>
