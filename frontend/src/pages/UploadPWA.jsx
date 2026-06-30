@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import axios from 'axios'
-import './UploadPWA.css'
+import { useAuth } from '../AuthContext'
 import Navbar from '../components/Navbar'
+import './UploadPWA.css'
 
-const API = 'http://127.0.0.1:8000'
+const API = 'https://drain-eye-production.up.railway.app'
 
 const SEVERITY_LABELS = {
   clear:             { label: 'Bersih',          color: '#27500A', bg: '#EAF3DE' },
@@ -20,6 +21,8 @@ const RISK_LABELS = {
 }
 
 export default function UploadPWA() {
+  const { user } = useAuth()
+
   const [file, setFile]             = useState(null)
   const [preview, setPreview]       = useState(null)
   const [kelurahan, setKelurahan]   = useState('')
@@ -54,6 +57,8 @@ export default function UploadPWA() {
     formData.append('kelurahan', kelurahan)
     formData.append('kecamatan', kecamatan)
     if (note) formData.append('reporter_note', note)
+    formData.append('user_id', user?.id || '')
+    formData.append('user_email', user?.email || '')
 
     try {
       const res = await axios.post(`${API}/api/detection/upload`, formData, {
@@ -80,18 +85,12 @@ export default function UploadPWA() {
   return (
     <div className="pwa-wrap">
 
-      {/* TOPBAR */}
-      <header className="pwa-topbar">
-        <a href="/history" className="pwa-back">← Kembali</a>
-        <span className="pwa-title">💧 DRAIN-EYE</span>
-        <span />
-      </header>
+      <Navbar title="Upload Foto Drainase" backHref="/history" />
 
       <div className="pwa-body">
         <h2 className="pwa-heading">Laporkan Drainase Tersumbat</h2>
         <p className="pwa-sub">Foto drainase di sekitar kamu dan bantu DKI Jakarta cegah banjir</p>
 
-        {/* HASIL DETEKSI */}
         {result && (
           <div className="result-card">
             <div className="result-icon">✅</div>
@@ -125,10 +124,8 @@ export default function UploadPWA() {
           </div>
         )}
 
-        {/* FORM UPLOAD */}
         {!result && (
           <>
-            {/* UPLOAD ZONE */}
             <label className="upload-zone">
               {preview ? (
                 <img src={preview} alt="preview" className="upload-preview" />
@@ -148,7 +145,6 @@ export default function UploadPWA() {
               />
             </label>
 
-            {/* FORM FIELDS */}
             <div className="form-group">
               <label className="form-label">Kelurahan *</label>
               <input
@@ -179,12 +175,10 @@ export default function UploadPWA() {
               />
             </div>
 
-            {/* ERROR */}
             {error && (
               <div className="error-box">⚠️ {error}</div>
             )}
 
-            {/* SUBMIT */}
             <button
               className={`btn-submit ${loading ? 'loading' : ''}`}
               onClick={handleSubmit}

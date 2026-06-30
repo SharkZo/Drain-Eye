@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
-import './History.css'
+import { useAuth } from '../AuthContext'
 import Navbar from '../components/Navbar'
+import './History.css'
 
 const API = 'https://drain-eye-production.up.railway.app'
 
@@ -20,6 +21,8 @@ const RISK_LABELS = {
 }
 
 export default function History() {
+  const { user, isDLH } = useAuth()
+
   const [history, setHistory]   = useState([])
   const [loading, setLoading]   = useState(true)
   const [filter, setFilter]     = useState('all')
@@ -27,13 +30,16 @@ export default function History() {
   const [selected, setSelected] = useState(null)
 
   useEffect(() => {
-    fetchHistory()
-  }, [])
+    if (user) fetchHistory()
+  }, [user])
 
   const fetchHistory = async () => {
     setLoading(true)
     try {
-      const res = await axios.get(`${API}/api/detection/history`)
+      const url = isDLH
+        ? `${API}/api/detection/history`
+        : `${API}/api/detection/history?user_id=${user.id}`
+      const res = await axios.get(url)
       setHistory(res.data.data || [])
     } catch (err) {
       console.error('Gagal fetch riwayat:', err)
@@ -46,7 +52,7 @@ export default function History() {
   const markAsHandled = async (id) => {
     try {
       await axios.patch(`${API}/api/detection/history/${id}/handled`)
-      fetchHistory() // refresh
+      fetchHistory()
     } catch (err) {
       console.error('Gagal update status:', err)
     }
@@ -78,11 +84,10 @@ export default function History() {
   return (
     <div className="hist-wrap">
 
-     <Navbar title="Riwayat Laporan" backHref="/upload" />
+      <Navbar title={isDLH ? "Semua Laporan Warga" : "Riwayat Laporan Saya"} backHref={isDLH ? "/" : "/upload"} />
 
       <div className="hist-body">
 
-        {/* STATS */}
         <div className="hist-stats">
           <div className="hstat critical">
             <div className="hstat-val">{history.filter(h => h.risk_level === 'critical').length}</div>
@@ -106,7 +111,6 @@ export default function History() {
           </div>
         </div>
 
-        {/* CONTROLS */}
         <div className="hist-controls">
           <input
             className="hist-search"
@@ -132,7 +136,6 @@ export default function History() {
           </div>
         </div>
 
-        {/* LIST */}
         <div className="hist-list">
           {loading && (
             <div className="hist-empty">⏳ Memuat riwayat...</div>
@@ -155,7 +158,10 @@ export default function History() {
                   {SEVERITY_LABELS[h.severity_class]?.icon || '📍'}
                 </div>
                 <div className="hist-item-info">
-                  <div className="hist-item-loc">{h.kelurahan}, {h.kecamatan}</div>
+                  <div className="hist-item-loc">
+                    {h.kelurahan}, {h.kecamatan}
+                    {isDLH && h.user_email && <span style={{ fontSize: 11, color: '#94a3b8', marginLeft: 6 }}>oleh {h.user_email}</span>}
+                  </div>
                   <div className="hist-item-time">{fmtDate(h.timestamp)} • {fmtTime(h.timestamp)}</div>
                 </div>
               </div>
@@ -177,6 +183,11 @@ export default function History() {
                   <div className="detail-row">
                     <span>ID Laporan</span><span>#{h.id}</span>
                   </div>
+                  {isDLH && (
+                    <div className="detail-row">
+                      <span>Dilaporkan oleh</span><span>{h.user_email || 'Anonim'}</span>
+                    </div>
+                  )}
                   <div className="detail-row">
                     <span>Tingkat Sumbatan</span>
                     <span style={{ background: SEVERITY_LABELS[h.severity_class]?.bg, color: SEVERITY_LABELS[h.severity_class]?.color, padding: '2px 8px', borderRadius: 10, fontSize: 11 }}>
@@ -199,7 +210,7 @@ export default function History() {
                     <span>Status</span>
                     <span>{h.status === 'handled' ? '✅ Sudah ditangani' : '⏳ Menunggu penanganan'}</span>
                   </div>
-                  {h.status === 'pending' && (
+                  {isDLH && h.status === 'pending' && (
                     <button
                       className="btn-handled"
                       onClick={(e) => { e.stopPropagation(); markAsHandled(h.id); }}
@@ -213,9 +224,11 @@ export default function History() {
           ))}
         </div>
 
-        <div style={{ textAlign: 'center', marginTop: 8 }}>
-          <a href="/upload" className="btn-new-report">+ Buat Laporan Baru</a>
-        </div>
+        {!isDLH && (
+          <div style={{ textAlign: 'center', marginTop: 8 }}>
+            <a href="/upload" className="btn-new-report">+ Buat Laporan Baru</a>
+          </div>
+        )}
 
       </div>
     </div>

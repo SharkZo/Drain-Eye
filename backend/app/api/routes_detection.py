@@ -15,7 +15,6 @@ UPLOAD_DIR = "uploads"
 DB_FILE    = "detections.json"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-# ── helper baca/tulis "database" JSON ──
 def read_db():
     if not os.path.exists(DB_FILE):
         return []
@@ -34,9 +33,10 @@ async def upload_drainage_photo(
     longitude:     float            = Form(...),
     kelurahan:     str              = Form(...),
     kecamatan:     str              = Form(...),
-    reporter_note: Optional[str]    = Form(None)
+    reporter_note: Optional[str]    = Form(None),
+    user_id:       Optional[str]    = Form(None),
+    user_email:    Optional[str]    = Form(None)
 ):
-    # validasi format
     if file.content_type not in ["image/jpeg", "image/png", "image/jpg"]:
         raise HTTPException(status_code=400, detail="Format file tidak didukung. Gunakan JPG atau PNG.")
 
@@ -44,7 +44,6 @@ async def upload_drainage_photo(
     if len(contents) > 5 * 1024 * 1024:
         raise HTTPException(status_code=400, detail="Ukuran file terlalu besar. Maksimal 5MB.")
 
-    # simpan file
     detection_id = str(uuid.uuid4())[:8].upper()
     file_ext     = file.filename.split(".")[-1]
     file_path    = os.path.join(UPLOAD_DIR, f"{detection_id}.{file_ext}")
@@ -65,9 +64,10 @@ async def upload_drainage_photo(
         else:
             risk_level = "critical"
 
-        # simpan ke JSON database
         record = {
             "id":                   detection_id,
+            "user_id":              user_id,
+            "user_email":           user_email,
             "kelurahan":            kelurahan,
             "kecamatan":            kecamatan,
             "latitude":             latitude,
@@ -80,11 +80,10 @@ async def upload_drainage_photo(
             "reporter_note":        reporter_note,
             "status":               "pending",
             "timestamp":            datetime.now().isoformat(),
-            "date_label":           "Hari ini"
         }
 
         db = read_db()
-        db.insert(0, record)   # tambah di paling atas
+        db.insert(0, record)
         write_db(db)
 
         return UploadResponse(
@@ -103,9 +102,15 @@ async def upload_drainage_photo(
 
 
 @router.get("/history")
-def get_history(limit: int = 50):
-    """Ambil semua riwayat deteksi."""
+def get_history(limit: int = 50, user_id: Optional[str] = None):
+    """
+    Ambil riwayat deteksi.
+    Kalau user_id diisi → hanya laporan milik user itu (untuk warga).
+    Kalau kosong → semua laporan (untuk DLH).
+    """
     db = read_db()
+    if user_id:
+        db = [r for r in db if r.get("user_id") == user_id]
     return {
         "total": len(db),
         "data":  db[:limit]
@@ -114,7 +119,6 @@ def get_history(limit: int = 50):
 
 @router.get("/history/{kelurahan}")
 def get_history_by_kelurahan(kelurahan: str, limit: int = 20):
-    """Ambil riwayat deteksi per kelurahan."""
     db      = read_db()
     filtered = [r for r in db if r["kelurahan"].lower() == kelurahan.lower()]
     return {
@@ -126,7 +130,6 @@ def get_history_by_kelurahan(kelurahan: str, limit: int = 20):
 
 @router.get("/stats")
 def get_stats():
-    """Statistik deteksi untuk dashboard."""
     db = read_db()
     return {
         "total_detections_today": len(db),
@@ -140,7 +143,6 @@ def get_stats():
 
 @router.patch("/history/{detection_id}/handled")
 def mark_as_handled(detection_id: str):
-    """Tandai laporan sebagai sudah ditangani."""
     db = read_db()
     for record in db:
         if record["id"] == detection_id:
