@@ -1,6 +1,6 @@
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 import uuid
 import os
 import json
@@ -10,6 +10,7 @@ from app.services.yolo_service import detect_blockage
 from app.utils.image_preprocess import preprocess_image
 
 router = APIRouter()
+WIB = timezone(timedelta(hours=7))
 
 UPLOAD_DIR = "uploads"
 DB_FILE    = "detections.json"
@@ -79,7 +80,7 @@ async def upload_drainage_photo(
             "risk_level":           risk_level,
             "reporter_note":        reporter_note,
             "status":               "pending",
-            "timestamp":            datetime.now().isoformat(),
+            "timestamp":            datetime.now(WIB).isoformat(),
         }
 
         db = read_db()
@@ -137,7 +138,7 @@ def get_stats():
         "blocked":          len([r for r in db if r["severity_class"] == "blocked"]),
         "partial":          len([r for r in db if r["severity_class"] == "partial"]),
         "clear":            len([r for r in db if r["severity_class"] == "clear"]),
-        "last_updated":     datetime.now().isoformat()
+        "last_updated":     datetime.now(WIB).isoformat()
     }
 
 
