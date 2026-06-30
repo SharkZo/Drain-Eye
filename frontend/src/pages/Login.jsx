@@ -194,7 +194,7 @@ export default function Login() {
                 onClick={() => setShowPassword(!showPassword)}
                 tabIndex={-1}
               >
-                {showPassword ? '🙈' : '👁️'}
+                {showPassword ? '🔒' : '👁️'}
               </button>
             </div>
             {fieldErrors.password && <div className="field-error-text">⚠️ {fieldErrors.password}</div>}
