@@ -1,14 +1,5 @@
 .dash-wrap { display: flex; flex-direction: column; min-height: 100vh; }
 
-.topbar { background: #1F4E79; padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; }
-.topbar-left { display: flex; align-items: center; gap: 10px; }
-.topbar-logo { font-size: 22px; }
-.topbar-title { color: #E6F1FB; font-size: 16px; font-weight: 600; }
-.topbar-sub { color: #93C5E8; font-size: 12px; }
-.topbar-right { display: flex; align-items: center; gap: 14px; }
-.topbar-time { color: #B5D4F4; font-size: 12px; }
-.btn-upload { background: #2E74B5; color: #fff; border: none; border-radius: 8px; padding: 7px 14px; font-size: 12px; cursor: pointer; text-decoration: none; }
-
 .dash-body { display: flex; flex: 1; }
 
 .sidebar { width: 180px; flex-shrink: 0; background: #fff; border-right: 1px solid #e2e8f0; padding: 12px 0; display: flex; flex-direction: column; gap: 2px; }

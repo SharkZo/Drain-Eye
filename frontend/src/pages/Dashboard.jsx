@@ -56,7 +56,6 @@ export default function Dashboard() {
   const [loadingSummary, setLoadingSummary] = useState(true)
   const [loadingStats, setLoadingStats]     = useState(true)
   const [fetchError, setFetchError] = useState(false)
-  const [time, setTime]         = useState(new Date())
 
   const fetchData = () => {
     setFetchError(false)
@@ -76,15 +75,11 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchData()
-    const timer = setInterval(() => setTime(new Date()), 1000)
-    return () => clearInterval(timer)
   }, [])
-
-  const fmtTime = t => t.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
 
   return (
     <div className="dash-wrap">
-      <Navbar title="Dashboard DLH DKI Jakarta" />
+      <Navbar title="Dashboard DLH DKI Jakarta" showClock showUpload />
 
       <div className="dash-body">
 
