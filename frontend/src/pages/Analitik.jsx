@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
+import { fetchWithRetry } from '../utils/apiClient'
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, Legend, ResponsiveContainer, Cell, PieChart, Pie
@@ -41,14 +42,18 @@ export default function Analitik() {
   const [riskData, setRiskData]   = useState([])
   const [loading, setLoading]     = useState(true)
   const [fetchError, setFetchError] = useState(false)
+  const [retryStatus, setRetryStatus] = useState(null)
 
   const fetchRisk = () => {
     setLoading(true)
     setFetchError(false)
-    axios.get(`${API}/api/risk/all`)
+    setRetryStatus(null)
+    fetchWithRetry(`${API}/api/risk/all`, {
+      onRetry: (a, m) => setRetryStatus(`Menghubungkan ke server... (percobaan ${a}/${m})`)
+    })
       .then(r => setRiskData(r.data.data || []))
       .catch(() => setFetchError(true))
-      .finally(() => setLoading(false))
+      .finally(() => { setLoading(false); setRetryStatus(null) })
   }
 
   useEffect(() => {
@@ -141,6 +146,9 @@ export default function Analitik() {
         <div className="chart-card">
           <div className="chart-title">🗺️ Risk Score per Kelurahan (Real-time LSTM)</div>
 
+          {loading && retryStatus && (
+            <div className="retry-status-banner">🔄 {retryStatus}</div>
+          )}
           {loading && <ChartSkeleton />}
 
           {!loading && fetchError && (

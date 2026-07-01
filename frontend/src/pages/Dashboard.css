@@ -72,6 +72,9 @@
 .btn-retry-inline { background: #633806; color: #fff; border: none; border-radius: 6px; padding: 5px 12px; font-size: 11px; cursor: pointer; font-family: inherit; flex-shrink: 0; }
 .btn-retry-inline:hover { background: #4a2a04; }
 
+/* RETRY STATUS (auto-retry sedang berjalan) */
+.retry-status-banner { background: #E6F1FB; color: #1F4E79; border: 1px solid #93C5E8; border-radius: 8px; padding: 8px 14px; font-size: 12px; }
+
 /* SKELETON LOADING */
 .skeleton-card { background: #f8fafc; }
 .skel-line { background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 4px; height: 14px; margin-bottom: 8px; }

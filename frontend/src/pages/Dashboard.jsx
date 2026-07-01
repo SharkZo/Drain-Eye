@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
+import { fetchWithRetry } from '../utils/apiClient'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 import Navbar from '../components/Navbar'
 import './Dashboard.css'
@@ -68,18 +69,22 @@ export default function Dashboard() {
   const [loadingSummary, setLoadingSummary] = useState(true)
   const [loadingStats, setLoadingStats]     = useState(true)
   const [fetchError, setFetchError] = useState(false)
+  const [retryStatus, setRetryStatus] = useState(null)
 
   const fetchData = () => {
     setFetchError(false)
+    setRetryStatus(null)
     setLoadingSummary(true)
     setLoadingStats(true)
 
-    axios.get(`${API}/api/dashboard/summary`)
+    const onRetry = (attempt, max) => setRetryStatus(`Menghubungkan ke server... (percobaan ${attempt}/${max})`)
+
+    fetchWithRetry(`${API}/api/dashboard/summary`, { onRetry })
       .then(r => setSummary(r.data))
       .catch(() => setFetchError(true))
-      .finally(() => setLoadingSummary(false))
+      .finally(() => { setLoadingSummary(false); setRetryStatus(null) })
 
-    axios.get(`${API}/api/detection/stats`)
+    fetchWithRetry(`${API}/api/detection/stats`, { onRetry })
       .then(r => setStats(r.data))
       .catch(() => setFetchError(true))
       .finally(() => setLoadingStats(false))
@@ -122,6 +127,11 @@ export default function Dashboard() {
         </nav>
 
         <main className="main-content">
+
+          {/* RETRY STATUS */}
+          {retryStatus && (
+            <div className="retry-status-banner">🔄 {retryStatus}</div>
+          )}
 
           {/* CONNECTION ERROR BANNER */}
           {fetchError && (
