@@ -1,183 +1,244 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
-import {
-  LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
-  Tooltip, Legend, ResponsiveContainer, Cell, PieChart, Pie
-} from 'recharts'
-import './Analitik.css'
 import Navbar from '../components/Navbar'
+import './Alert.css'
 
 const API = 'https://drain-eye-production.up.railway.app'
 
-const COLORS = {
-  critical: '#E24B4A',
-  high:     '#EF9F27',
-  moderate: '#F5C842',
-  low:      '#3B6D11',
+const RISK_LABELS = {
+  low:      { label: 'Rendah',  color: '#27500A', bg: '#EAF3DE', icon: '🟢' },
+  moderate: { label: 'Sedang',  color: '#633806', bg: '#FAEEDA', icon: '🟠' },
+  high:     { label: 'Tinggi',  color: '#A32D2D', bg: '#FCEBEB', icon: '🔴' },
+  critical: { label: 'Kritis',  color: '#7B1D1D', bg: '#FEE2E2', icon: '🚨' },
 }
 
-const TREND_DATA = [
-  { day: 'Sen', risk_avg: 42, blockage_avg: 55, reports: 12 },
-  { day: 'Sel', risk_avg: 38, blockage_avg: 48, reports: 9  },
-  { day: 'Rab', risk_avg: 51, blockage_avg: 62, reports: 15 },
-  { day: 'Kam', risk_avg: 67, blockage_avg: 71, reports: 21 },
-  { day: 'Jum', risk_avg: 72, blockage_avg: 78, reports: 28 },
-  { day: 'Sab', risk_avg: 58, blockage_avg: 65, reports: 19 },
-  { day: 'Min', risk_avg: 45, blockage_avg: 52, reports: 14 },
+const DUMMY_ALERTS = [
+  {
+    id: 'ALT001', kelurahan: 'Pluit', kecamatan: 'Penjaringan',
+    risk_score: 91, risk_level: 'critical',
+    message: 'Risiko banjir kritis — 3 titik drainase tersumbat parah terdeteksi',
+    triggered_at: new Date(Date.now() - 25 * 60000).toISOString(),
+    is_acknowledged: false, blockage_pct: 89.1
+  },
+  {
+    id: 'ALT002', kelurahan: 'Koja', kecamatan: 'Koja',
+    risk_score: 84, risk_level: 'critical',
+    message: 'Drainase 84% tersumbat — 4 laporan warga masuk dalam 1 jam terakhir',
+    triggered_at: new Date(Date.now() - 52 * 60000).toISOString(),
+    is_acknowledged: false, blockage_pct: 84.3
+  },
+  {
+    id: 'ALT003', kelurahan: 'Tambora', kecamatan: 'Tambora',
+    risk_score: 72, risk_level: 'high',
+    message: 'Prakiraan hujan lebat 48 jam ke depan — risiko banjir meningkat signifikan',
+    triggered_at: new Date(Date.now() - 90 * 60000).toISOString(),
+    is_acknowledged: false, blockage_pct: 65.7
+  },
+  {
+    id: 'ALT004', kelurahan: 'Cilincing', kecamatan: 'Cilincing',
+    risk_score: 65, risk_level: 'high',
+    message: 'Sumbatan drainase pasar meningkat 30% dalam 6 jam terakhir',
+    triggered_at: new Date(Date.now() - 3 * 3600000).toISOString(),
+    is_acknowledged: true, blockage_pct: 61.7
+  },
+  {
+    id: 'ALT005', kelurahan: 'Palmerah', kecamatan: 'Palmerah',
+    risk_score: 58, risk_level: 'high',
+    message: 'Titik drainase baru terdeteksi tersumbat di Jl. Palmerah Selatan',
+    triggered_at: new Date(Date.now() - 5 * 3600000).toISOString(),
+    is_acknowledged: true, blockage_pct: 57.3
+  },
 ]
 
-const SEVERITY_PIE = [
-  { name: 'Sangat Tersumbat', value: 12, color: '#E24B4A' },
-  { name: 'Tersumbat',        value: 23, color: '#EF9F27' },
-  { name: 'Sebagian',         value: 31, color: '#F5C842' },
-  { name: 'Bersih',           value: 21, color: '#3B6D11' },
-]
-
-function ChartSkeleton({ height = 220 }) {
-  return <div className="chart-skeleton" style={{ height }} />
+function SkeletonAlert() {
+  return (
+    <div className="alert-item skeleton-alert">
+      <div className="skel-line w40" style={{ height: 16 }}></div>
+      <div className="skel-line w90" style={{ height: 12 }}></div>
+      <div className="skel-line w30" style={{ height: 10 }}></div>
+    </div>
+  )
 }
 
-export default function Analitik() {
-  const [riskData, setRiskData]   = useState([])
-  const [loading, setLoading]     = useState(true)
-  const [fetchError, setFetchError] = useState(false)
-
-  const fetchRisk = () => {
-    setLoading(true)
-    setFetchError(false)
-    axios.get(`${API}/api/risk/all`)
-      .then(r => setRiskData(r.data.data || []))
-      .catch(() => setFetchError(true))
-      .finally(() => setLoading(false))
-  }
+export default function Alert() {
+  const [alerts, setAlerts]         = useState(DUMMY_ALERTS)
+  const [riskData, setRiskData]     = useState([])
+  const [filter, setFilter]         = useState('all')
+  const [loading, setLoading]       = useState(true)
+  const [loadError, setLoadError]   = useState(false)
 
   useEffect(() => {
     fetchRisk()
   }, [])
 
+  const fetchRisk = () => {
+    setLoading(true)
+    setLoadError(false)
+    axios.get(`${API}/api/risk/all`)
+      .then(r => setRiskData(r.data.data || []))
+      .catch(() => setLoadError(true))
+      .finally(() => setLoading(false))
+  }
+
+  const acknowledge = (id) => {
+    setAlerts(prev => prev.map(a =>
+      a.id === id ? { ...a, is_acknowledged: true } : a
+    ))
+  }
+
+  const acknowledgeAll = () => {
+    setAlerts(prev => prev.map(a => ({ ...a, is_acknowledged: true })))
+  }
+
+  const filtered = alerts.filter(a => {
+    if (filter === 'unread') return !a.is_acknowledged
+    if (filter === 'critical') return a.risk_level === 'critical'
+    if (filter === 'high') return a.risk_level === 'high'
+    return true
+  })
+
+  const unreadCount = alerts.filter(a => !a.is_acknowledged).length
+
+  const fmtTime = (ts) => {
+    const diff = Math.floor((Date.now() - new Date(ts)) / 60000)
+    if (diff < 60) return `${diff} menit lalu`
+    if (diff < 1440) return `${Math.floor(diff/60)} jam lalu`
+    return `${Math.floor(diff/1440)} hari lalu`
+  }
+
   return (
-    <div className="ana-wrap">
-      <Navbar title="Analitik" backHref="/" />
+    <div className="alert-wrap">
+      <Navbar title="Pusat Alert" backHref="/" />
 
-      <div className="ana-body">
+      <div className="alert-body">
 
-        <div className="ana-summary">
-          <div className="ana-card">
-            <div className="ana-val red">87</div>
-            <div className="ana-lbl">Total Laporan Minggu Ini</div>
+        <div className="alert-summary">
+          <div className="ascard critical">
+            <div className="ascard-val">{alerts.filter(a => a.risk_level === 'critical').length}</div>
+            <div className="ascard-lbl">🚨 Kritis</div>
           </div>
-          <div className="ana-card">
-            <div className="ana-val amber">52.4</div>
-            <div className="ana-lbl">Rata-rata Risk Score</div>
+          <div className="ascard high">
+            <div className="ascard-val">{alerts.filter(a => a.risk_level === 'high').length}</div>
+            <div className="ascard-lbl">🔴 Tinggi</div>
           </div>
-          <div className="ana-card">
-            <div className="ana-val green">41</div>
-            <div className="ana-lbl">Laporan Ditangani</div>
+          <div className="ascard unread">
+            <div className="ascard-val">{unreadCount}</div>
+            <div className="ascard-lbl">📬 Belum Dibaca</div>
           </div>
-          <div className="ana-card">
-            <div className="ana-val blue">62.3%</div>
-            <div className="ana-lbl">Rata-rata Sumbatan</div>
-          </div>
-        </div>
-
-        <div className="chart-card">
-          <div className="chart-title">📊 Tren Risk Score & Sumbatan (7 Hari)</div>
-          <ResponsiveContainer width="100%" height={240}>
-            <LineChart data={TREND_DATA} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-              <XAxis dataKey="day" tick={{ fontSize: 12 }} />
-              <YAxis domain={[0, 100]} tick={{ fontSize: 12 }} />
-              <Tooltip />
-              <Legend />
-              <Line type="monotone" dataKey="risk_avg"     name="Risk Score"  stroke="#E24B4A" strokeWidth={2} dot={{ r: 4 }} />
-              <Line type="monotone" dataKey="blockage_avg" name="% Sumbatan"  stroke="#EF9F27" strokeWidth={2} dot={{ r: 4 }} />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div className="grid-2">
-          <div className="chart-card">
-            <div className="chart-title">📋 Jumlah Laporan per Hari</div>
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={TREND_DATA} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                <XAxis dataKey="day" tick={{ fontSize: 12 }} />
-                <YAxis tick={{ fontSize: 12 }} />
-                <Tooltip />
-                <Bar dataKey="reports" name="Laporan" radius={[4, 4, 0, 0]}>
-                  {TREND_DATA.map((_, i) => (
-                    <Cell key={i} fill={i === 4 ? '#E24B4A' : '#2E74B5'} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-
-          <div className="chart-card">
-            <div className="chart-title">🥧 Distribusi Tingkat Sumbatan</div>
-            <ResponsiveContainer width="100%" height={200}>
-              <PieChart>
-                <Pie
-                  data={SEVERITY_PIE}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={50}
-                  outerRadius={80}
-                  dataKey="value"
-                  label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
-                  labelLine={false}
-                >
-                  {SEVERITY_PIE.map((entry, i) => (
-                    <Cell key={i} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(v, n) => [v, n]} />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
+          <div className="ascard total">
+            <div className="ascard-val">{alerts.length}</div>
+            <div className="ascard-lbl">📋 Total Alert</div>
           </div>
         </div>
 
-        <div className="chart-card">
-          <div className="chart-title">🗺️ Risk Score per Kelurahan (Real-time LSTM)</div>
+        {/* RISK SCORE DARI LSTM */}
+        <div className="risk-section">
+          <div className="section-title">📊 Risk Score Real-time per Kelurahan</div>
 
-          {loading && <ChartSkeleton />}
-
-          {!loading && fetchError && (
-            <div className="ana-error-banner">
-              <span>⚠️ Gagal memuat data risk score real-time.</span>
-              <button onClick={fetchRisk} className="btn-retry-inline">🔄 Coba Lagi</button>
+          {loading && (
+            <div className="risk-grid">
+              {[1,2,3,4,5,6].map(i => (
+                <div key={i} className="risk-card skeleton-risk"></div>
+              ))}
             </div>
           )}
 
-          {!loading && !fetchError && riskData.length === 0 && (
-            <div className="ana-empty-state">Belum ada data risk score tersedia saat ini.</div>
+          {!loading && loadError && (
+            <div className="risk-error">
+              <span>⚠️ Gagal memuat data risk score dari server.</span>
+              <button className="btn-retry-sm" onClick={fetchRisk}>🔄 Coba Lagi</button>
+            </div>
           )}
 
-          {!loading && !fetchError && riskData.length > 0 && (
-            <>
-              <ResponsiveContainer width="100%" height={220}>
-                <BarChart data={riskData} layout="vertical" margin={{ left: 20, right: 24 }}>
-                  <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 11 }} />
-                  <YAxis type="category" dataKey="kelurahan" tick={{ fontSize: 11 }} width={90} />
-                  <Tooltip formatter={(v) => [`${v}/100`, 'Risk Score']} />
-                  <Bar dataKey="risk_score" radius={[0, 4, 4, 0]}>
-                    {riskData.map((d, i) => (
-                      <Cell key={i} fill={COLORS[d.risk_level] || '#64748b'} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-              <div className="legend-row">
-                {Object.entries(COLORS).map(([k, v]) => (
-                  <span key={k} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11 }}>
-                    <span style={{ width: 10, height: 10, borderRadius: '50%', background: v, display: 'inline-block' }} />
-                    {k.charAt(0).toUpperCase() + k.slice(1)}
-                  </span>
-                ))}
-              </div>
-            </>
+          {!loading && !loadError && riskData.length === 0 && (
+            <div className="empty-state-sm">Belum ada data risk score tersedia.</div>
           )}
+
+          {!loading && !loadError && riskData.length > 0 && (
+            <div className="risk-grid">
+              {riskData.slice(0, 6).map((r, i) => (
+                <div key={i} className="risk-card" style={{
+                  borderLeft: `4px solid ${RISK_LABELS[r.risk_level]?.color}`
+                }}>
+                  <div className="risk-name">{r.kelurahan}</div>
+                  <div className="risk-score" style={{ color: RISK_LABELS[r.risk_level]?.color }}>
+                    {r.risk_score}
+                  </div>
+                  <div className="risk-badge" style={{
+                    background: RISK_LABELS[r.risk_level]?.bg,
+                    color: RISK_LABELS[r.risk_level]?.color
+                  }}>
+                    {RISK_LABELS[r.risk_level]?.icon} {RISK_LABELS[r.risk_level]?.label}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* FILTER & ACTIONS */}
+        <div className="alert-controls">
+          <div className="filter-row">
+            {['all', 'unread', 'critical', 'high'].map(f => (
+              <button
+                key={f}
+                className={`filter-btn ${filter === f ? 'active' : ''}`}
+                onClick={() => setFilter(f)}
+              >
+                {f === 'all'      ? 'Semua'        :
+                 f === 'unread'   ? `📬 Belum Dibaca (${unreadCount})` :
+                 f === 'critical' ? '🚨 Kritis'    : '🔴 Tinggi'}
+              </button>
+            ))}
+          </div>
+          {unreadCount > 0 && (
+            <button className="btn-ack-all" onClick={acknowledgeAll}>
+              ✅ Tandai Semua Dibaca
+            </button>
+          )}
+        </div>
+
+        {/* ALERT LIST */}
+        <div className="alert-list">
+          {filtered.length === 0 && (
+            <div className="alert-empty">✅ Tidak ada alert yang sesuai filter</div>
+          )}
+          {filtered.map(a => (
+            <div key={a.id} className={`alert-item ${a.is_acknowledged ? 'read' : 'unread-item'}`}>
+              <div className="alert-item-header">
+                <div className="alert-item-left">
+                  <span className="alert-icon">{RISK_LABELS[a.risk_level]?.icon}</span>
+                  <div>
+                    <div className="alert-item-title">
+                      {a.kelurahan}, {a.kecamatan}
+                      {!a.is_acknowledged && <span className="new-badge">BARU</span>}
+                    </div>
+                    <div className="alert-item-time">{fmtTime(a.triggered_at)}</div>
+                  </div>
+                </div>
+                <div className="alert-item-right">
+                  <span className="risk-score-badge" style={{
+                    background: RISK_LABELS[a.risk_level]?.bg,
+                    color: RISK_LABELS[a.risk_level]?.color
+                  }}>
+                    Skor {a.risk_score}/100
+                  </span>
+                </div>
+              </div>
+              <div className="alert-item-msg">{a.message}</div>
+              <div className="alert-item-footer">
+                <span className="blockage-info">⛽ Sumbatan: {a.blockage_pct}%</span>
+                {!a.is_acknowledged && (
+                  <button className="btn-ack" onClick={() => acknowledge(a.id)}>
+                    ✅ Tandai Dibaca
+                  </button>
+                )}
+                {a.is_acknowledged && (
+                  <span className="ack-label">✅ Sudah dibaca</span>
+                )}
+              </div>
+            </div>
+          ))}
         </div>
 
       </div>

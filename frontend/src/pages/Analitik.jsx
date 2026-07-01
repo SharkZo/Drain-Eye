@@ -33,15 +33,26 @@ const SEVERITY_PIE = [
   { name: 'Bersih',           value: 21, color: '#3B6D11' },
 ]
 
-export default function Analitik() {
-  const [riskData, setRiskData] = useState([])
-  const [loading, setLoading]   = useState(true)
+function ChartSkeleton({ height = 220 }) {
+  return <div className="chart-skeleton" style={{ height }} />
+}
 
-  useEffect(() => {
+export default function Analitik() {
+  const [riskData, setRiskData]   = useState([])
+  const [loading, setLoading]     = useState(true)
+  const [fetchError, setFetchError] = useState(false)
+
+  const fetchRisk = () => {
+    setLoading(true)
+    setFetchError(false)
     axios.get(`${API}/api/risk/all`)
       .then(r => setRiskData(r.data.data || []))
-      .catch(() => {})
+      .catch(() => setFetchError(true))
       .finally(() => setLoading(false))
+  }
+
+  useEffect(() => {
+    fetchRisk()
   }, [])
 
   return (
@@ -127,31 +138,47 @@ export default function Analitik() {
           </div>
         </div>
 
-        {!loading && riskData.length > 0 && (
-          <div className="chart-card">
-            <div className="chart-title">🗺️ Risk Score per Kelurahan (Real-time LSTM)</div>
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={riskData} layout="vertical" margin={{ left: 20, right: 24 }}>
-                <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 11 }} />
-                <YAxis type="category" dataKey="kelurahan" tick={{ fontSize: 11 }} width={90} />
-                <Tooltip formatter={(v) => [`${v}/100`, 'Risk Score']} />
-                <Bar dataKey="risk_score" radius={[0, 4, 4, 0]}>
-                  {riskData.map((d, i) => (
-                    <Cell key={i} fill={COLORS[d.risk_level] || '#64748b'} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-            <div className="legend-row">
-              {Object.entries(COLORS).map(([k, v]) => (
-                <span key={k} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11 }}>
-                  <span style={{ width: 10, height: 10, borderRadius: '50%', background: v, display: 'inline-block' }} />
-                  {k.charAt(0).toUpperCase() + k.slice(1)}
-                </span>
-              ))}
+        <div className="chart-card">
+          <div className="chart-title">🗺️ Risk Score per Kelurahan (Real-time LSTM)</div>
+
+          {loading && <ChartSkeleton />}
+
+          {!loading && fetchError && (
+            <div className="ana-error-banner">
+              <span>⚠️ Gagal memuat data risk score real-time.</span>
+              <button onClick={fetchRisk} className="btn-retry-inline">🔄 Coba Lagi</button>
             </div>
-          </div>
-        )}
+          )}
+
+          {!loading && !fetchError && riskData.length === 0 && (
+            <div className="ana-empty-state">Belum ada data risk score tersedia saat ini.</div>
+          )}
+
+          {!loading && !fetchError && riskData.length > 0 && (
+            <>
+              <ResponsiveContainer width="100%" height={220}>
+                <BarChart data={riskData} layout="vertical" margin={{ left: 20, right: 24 }}>
+                  <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 11 }} />
+                  <YAxis type="category" dataKey="kelurahan" tick={{ fontSize: 11 }} width={90} />
+                  <Tooltip formatter={(v) => [`${v}/100`, 'Risk Score']} />
+                  <Bar dataKey="risk_score" radius={[0, 4, 4, 0]}>
+                    {riskData.map((d, i) => (
+                      <Cell key={i} fill={COLORS[d.risk_level] || '#64748b'} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+              <div className="legend-row">
+                {Object.entries(COLORS).map(([k, v]) => (
+                  <span key={k} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11 }}>
+                    <span style={{ width: 10, height: 10, borderRadius: '50%', background: v, display: 'inline-block' }} />
+                    {k.charAt(0).toUpperCase() + k.slice(1)}
+                  </span>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
 
       </div>
     </div>
