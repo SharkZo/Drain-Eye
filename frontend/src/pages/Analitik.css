@@ -1,11 +1,5 @@
 .ana-wrap { min-height: 100vh; background: #f0f4f8; display: flex; flex-direction: column; }
 
-.ana-topbar { background: #1F4E79; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; }
-.ana-back { color: #B5D4F4; font-size: 13px; text-decoration: none; }
-.ana-back:hover { color: #E6F1FB; }
-.ana-title { color: #E6F1FB; font-size: 15px; font-weight: 600; }
-.ana-sub { color: #93C5E8; font-size: 12px; }
-
 .ana-body { max-width: 900px; margin: 0 auto; padding: 20px 16px; width: 100%; display: flex; flex-direction: column; gap: 16px; }
 
 .ana-summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
@@ -23,3 +17,35 @@
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 
 .legend-row { display: flex; align-items: center; gap: 12px; margin-top: 10px; flex-wrap: wrap; }
+
+/* SKELETON LOADING */
+.chart-skeleton {
+  border-radius: 8px;
+  background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+}
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+/* ERROR BANNER */
+.ana-error-banner {
+  background: #FAEEDA; color: #633806; border: 1px solid #F5C842; border-radius: 8px;
+  padding: 10px 14px; font-size: 12px; display: flex; align-items: center;
+  justify-content: space-between; gap: 10px; flex-wrap: wrap;
+}
+.btn-retry-inline { background: #633806; color: #fff; border: none; border-radius: 6px; padding: 5px 12px; font-size: 11px; cursor: pointer; font-family: inherit; flex-shrink: 0; }
+.btn-retry-inline:hover { background: #4a2a04; }
+
+/* EMPTY STATE */
+.ana-empty-state { text-align: center; padding: 32px 12px; color: #94a3b8; font-size: 12px; }
+
+/* MOBILE RESPONSIVE */
+@media (max-width: 700px) {
+  .ana-summary { grid-template-columns: repeat(2, 1fr); }
+  .grid-2 { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 420px) {
+  .ana-summary { grid-template-columns: 1fr; }
+  .ana-val { font-size: 22px; }
+}
