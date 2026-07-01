@@ -46,6 +46,18 @@ const priorityStyle = (p) => ({
   P3: { background: '#EAF3DE', color: '#27500A' },
 }[p] || {})
 
+function citywideScore(data) {
+  const avg = data.reduce((s, d) => s + d.risk, 0) / data.length
+  return Math.round(avg)
+}
+
+function scoreLevel(score) {
+  if (score >= 70) return { label: 'Kritis',  color: '#A32D2D' }
+  if (score >= 50) return { label: 'Tinggi',  color: '#633806' }
+  if (score >= 30) return { label: 'Sedang',  color: '#713F12' }
+  return { label: 'Aman', color: '#27500A' }
+}
+
 function SkeletonCard() {
   return <div className="metric-card skeleton-card"><div className="skel-line w60"></div><div className="skel-line w80"></div></div>
 }
@@ -77,6 +89,9 @@ export default function Dashboard() {
     fetchData()
   }, [])
 
+  const cityScore = citywideScore(KELURAHAN_DATA)
+  const cityLevel = scoreLevel(cityScore)
+
   return (
     <div className="dash-wrap">
       <Navbar title="Dashboard DLH DKI Jakarta" showClock showUpload />
@@ -90,6 +105,20 @@ export default function Dashboard() {
           <a href="/alert"    className="nav-item">🔔 Alert <span className="nav-badge">3</span></a>
           <a href="/analitik" className="nav-item">📈 Analitik</a>
           <a href="/laporan"  className="nav-item">📄 Laporan</a>
+
+          <div className="sidebar-footer">
+            <div className="sf-status">
+              <span className={`sf-status-dot ${fetchError ? 'offline' : 'online'}`} />
+              {fetchError ? 'Server terputus' : 'Sistem online'}
+            </div>
+
+            <div className="sf-city-score">
+              <div className="sf-city-score-val" style={{ color: cityLevel.color }}>{cityScore}</div>
+              <div className="sf-city-score-lbl" style={{ color: cityLevel.color }}>Risiko Kota — {cityLevel.label}</div>
+            </div>
+
+            <div className="sf-version">DRAIN-EYE v1.0 · DLH DKI Jakarta</div>
+          </div>
         </nav>
 
         <main className="main-content">
