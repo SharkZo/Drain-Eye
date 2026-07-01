@@ -48,8 +48,11 @@ const LOADING_STEPS = [
 ]
 
 export default function UploadPWA() {
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
   const fileInputRef = useRef(null)
+
+  const isDlhRole = profile?.role === 'dlh_manager' || profile?.role === 'dlh_operator'
+  const backHref = isDlhRole ? '/' : '/history'
 
   const [file, setFile]             = useState(null)
   const [preview, setPreview]       = useState(null)
@@ -205,7 +208,7 @@ export default function UploadPWA() {
 
   return (
     <div className="pwa-wrap">
-      <Navbar title="Upload Foto Drainase" backHref="/history" />
+      <Navbar title="Upload Foto Drainase" backHref={backHref} />
 
       <div className="pwa-body">
         <h2 className="pwa-heading">Laporkan Drainase Tersumbat</h2>

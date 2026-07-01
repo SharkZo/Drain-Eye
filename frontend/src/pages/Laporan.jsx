@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import axios from 'axios'
 import Navbar from '../components/Navbar'
+import { fetchWithRetry } from '../utils/apiClient'
 import './Laporan.css'
 
 const API = 'https://drain-eye-production.up.railway.app'
@@ -12,11 +12,25 @@ const RISK_LABELS = {
   critical: { label: 'Kritis',  color: '#7B1D1D', bg: '#FEE2E2' },
 }
 
+const WIB_OFFSET_MS = 7 * 60 * 60 * 1000
+
+function todayWIBString() {
+  const now = new Date(Date.now() + WIB_OFFSET_MS)
+  return now.toISOString().slice(0, 10) // YYYY-MM-DD
+}
+
+function isToday(timestamp) {
+  if (!timestamp) return false
+  const t = new Date(new Date(timestamp).getTime() + WIB_OFFSET_MS)
+  return t.toISOString().slice(0, 10) === todayWIBString()
+}
+
 export default function Laporan() {
   const [history, setHistory]       = useState([])
   const [riskData, setRiskData]     = useState([])
   const [loading, setLoading]       = useState(true)
   const [loadError, setLoadError]   = useState(null)
+  const [retryStatus, setRetryStatus] = useState(null)
   const [generating, setGenerating] = useState(false)
 
   useEffect(() => {
@@ -26,17 +40,22 @@ export default function Laporan() {
   const fetchData = async () => {
     setLoading(true)
     setLoadError(null)
+    setRetryStatus(null)
+    const onRetry = (a, m) => setRetryStatus(`Menghubungkan ke server... (percobaan ${a}/${m})`)
     try {
       const [h, r] = await Promise.all([
-        axios.get(`${API}/api/detection/history`),
-        axios.get(`${API}/api/risk/all`)
+        fetchWithRetry(`${API}/api/detection/history`, { onRetry }),
+        fetchWithRetry(`${API}/api/risk/all`, { onRetry })
       ])
-      setHistory(h.data.data || [])
+      // Hanya ambil laporan yang masuk HARI INI (WIB) — sesuai judul "Laporan Harian"
+      const todayOnly = (h.data.data || []).filter(item => isToday(item.timestamp))
+      setHistory(todayOnly)
       setRiskData(r.data.data || [])
     } catch (err) {
       setLoadError('Gagal memuat data laporan. Periksa koneksi internet kamu.')
     } finally {
       setLoading(false)
+      setRetryStatus(null)
     }
   }
 
@@ -71,7 +90,7 @@ export default function Laporan() {
       <div className="lap-toolbar no-print">
         <div className="lap-toolbar-info">
           {!loading && !loadError && (
-            <span>📊 Laporan dibuat {generatedAt} WIB • {stats.total} data laporan</span>
+            <span>📊 Laporan dibuat {generatedAt} WIB • {stats.total} data laporan hari ini</span>
           )}
         </div>
         <button
@@ -91,7 +110,7 @@ export default function Laporan() {
         {loading && (
           <div className="lap-state-card">
             <div className="lap-spinner"></div>
-            <div>Memuat data laporan...</div>
+            <div>{retryStatus || 'Memuat data laporan...'}</div>
           </div>
         )}
 
@@ -239,7 +258,7 @@ export default function Laporan() {
                     </tbody>
                   </table>
                   {history.length > 10 && (
-                    <div className="lap-note">* Menampilkan 10 dari {history.length} laporan. Cetak untuk melihat semua data.</div>
+                    <div className="lap-note">* Menampilkan 10 dari {history.length} laporan hari ini. Cetak untuk melihat semua data.</div>
                   )}
                 </>
               )}

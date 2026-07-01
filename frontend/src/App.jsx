@@ -7,6 +7,7 @@ import History from './pages/History'
 import Alert from './pages/Alert'
 import Analitik from './pages/Analitik'
 import Laporan from './pages/Laporan'
+import Peta from './pages/Peta'
 import Login from './pages/Login'
 import './App.css'
 
@@ -44,6 +45,11 @@ function App() {
           <Route path="/laporan" element={
             <ProtectedRoute requireDLH={true}>
               <Laporan />
+            </ProtectedRoute>
+          } />
+          <Route path="/peta" element={
+            <ProtectedRoute requireDLH={true}>
+              <Peta />
             </ProtectedRoute>
           } />
         </Routes>

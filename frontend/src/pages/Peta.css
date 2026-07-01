@@ -1,0 +1,45 @@
+.peta-wrap { min-height: 100vh; background: #f0f4f8; display: flex; flex-direction: column; }
+
+.peta-body { max-width: 1000px; margin: 0 auto; padding: 20px 16px; width: 100%; display: flex; flex-direction: column; gap: 16px; box-sizing: border-box; }
+
+/* CONTROLS */
+.peta-controls { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+.filter-row { display: flex; gap: 6px; flex-wrap: wrap; }
+.filter-btn { font-size: 11px; padding: 5px 10px; border-radius: 20px; border: 1px solid #e2e8f0; background: #fff; color: #64748b; cursor: pointer; font-family: inherit; transition: all .15s; }
+.filter-btn:hover { border-color: #1F4E79; color: #1F4E79; }
+.filter-btn.active { background: #1F4E79; color: #fff; border-color: #1F4E79; }
+
+.peta-legend { display: flex; gap: 12px; flex-wrap: wrap; font-size: 11px; color: #64748b; }
+.legend-chip { display: flex; align-items: center; gap: 4px; text-transform: capitalize; }
+.legend-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+
+/* MAP CARD */
+.map-card { position: relative; background: #fff; border-radius: 10px; padding: 10px; border: 1px solid #e2e8f0; }
+.peta-empty-overlay {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  background: rgba(255,255,255,0.95); padding: 12px 20px; border-radius: 8px;
+  font-size: 12px; color: #94a3b8; box-shadow: 0 2px 8px rgba(0,0,0,0.12); z-index: 500;
+}
+
+/* STATE CARDS */
+.peta-state-card { background: #fff; border-radius: 10px; padding: 60px 20px; text-align: center; border: 1px solid #e2e8f0; display: flex; flex-direction: column; align-items: center; gap: 12px; color: #64748b; font-size: 13px; }
+.peta-state-card.error { color: #A32D2D; }
+.peta-spinner { width: 28px; height: 28px; border: 3px solid #E6F1FB; border-top-color: #1F4E79; border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.btn-retry { background: #FCEBEB; color: #A32D2D; border: 1px solid #FCA5A5; border-radius: 8px; padding: 8px 16px; font-size: 12px; cursor: pointer; font-family: inherit; font-weight: 500; }
+.btn-retry:hover { background: #FAD4D4; }
+
+/* RISK SUMMARY */
+.risk-summary-card { background: #fff; border-radius: 10px; padding: 16px; border: 1px solid #e2e8f0; }
+.section-title { font-size: 13px; font-weight: 600; color: #1F4E79; margin-bottom: 12px; }
+.risk-chip-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+.risk-chip { background: #f8fafc; border-radius: 8px; padding: 10px 12px; }
+.risk-chip-name { font-size: 11px; color: #374151; font-weight: 500; }
+.risk-chip-score { font-size: 20px; font-weight: 600; margin-top: 2px; }
+.empty-state-sm { text-align: center; padding: 20px; color: #94a3b8; font-size: 12px; }
+
+/* MOBILE */
+@media (max-width: 700px) {
+  .risk-chip-grid { grid-template-columns: repeat(2, 1fr); }
+  .peta-controls { flex-direction: column; align-items: stretch; }
+}
