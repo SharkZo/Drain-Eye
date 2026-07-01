@@ -23,9 +23,9 @@
 .green-tag { background: #EAF3DE; color: #27500A; }
 .gray-tag { background: #f1f5f9; color: #64748b; }
 
-.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: stretch; }
 
-.card { background: #fff; border-radius: 10px; padding: 16px; border: 1px solid #e2e8f0; }
+.card { background: #fff; border-radius: 10px; padding: 16px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; }
 .card-title { font-size: 13px; font-weight: 600; color: #1F4E79; margin-bottom: 12px; }
 
 .legend-row { display: flex; align-items: center; gap: 10px; margin-top: 10px; font-size: 11px; color: #64748b; flex-wrap: wrap; }
@@ -34,7 +34,7 @@
 .alert-row { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; border-bottom: 1px solid #f1f5f9; }
 .alert-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
 .alert-body { flex: 1; min-width: 0; }
-.alert-title { font-size: 12px; font-weight: 500; }
+.alert-title { font-size: 12px; font-weight: 600; color: #1e293b; }
 .alert-msg { font-size: 11px; color: #64748b; margin-top: 2px; }
 .alert-time { font-size: 10px; color: #94a3b8; margin-top: 2px; }
 .btn-ack { font-size: 10px; padding: 3px 8px; border-radius: 6px; border: 1px solid #e2e8f0; background: #f8fafc; color: #64748b; cursor: pointer; white-space: nowrap; flex-shrink: 0; }

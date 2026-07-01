@@ -5,6 +5,9 @@ export default function Navbar({ title, backHref, showClock = false, showUpload 
   const { signOut, profile } = useAuth()
   const [time, setTime] = useState(new Date())
 
+  const isDlhRole = profile?.role === 'dlh_manager' || profile?.role === 'dlh_operator'
+  const shouldShowUpload = showUpload && !isDlhRole
+
   useEffect(() => {
     if (!showClock) return
     const timer = setInterval(() => setTime(new Date()), 1000)
@@ -38,7 +41,7 @@ export default function Navbar({ title, backHref, showClock = false, showUpload 
           <span style={{ color: '#B5D4F4', fontSize: 12 }}>{fmtTime(time)} WIB</span>
         )}
 
-        {showUpload && (
+        {shouldShowUpload && (
           <a
             href="/upload"
             style={{

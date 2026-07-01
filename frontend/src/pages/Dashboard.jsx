@@ -138,18 +138,20 @@ export default function Dashboard() {
 
             <div className="card">
               <div className="card-title">📊 Risk Score per Kelurahan</div>
-              <ResponsiveContainer width="100%" height={240}>
-                <BarChart data={KELURAHAN_DATA} layout="vertical" margin={{ left: 16, right: 24 }}>
-                  <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 11 }} />
-                  <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={88} />
-                  <Tooltip formatter={(v) => [`${v}/100`, 'Risk Score']} />
-                  <Bar dataKey="risk" radius={[0, 4, 4, 0]}>
-                    {KELURAHAN_DATA.map((d, i) => (
-                      <Cell key={i} fill={riskColor(d.level)} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+              <div style={{ flex: 1, minHeight: 240 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={KELURAHAN_DATA} layout="vertical" margin={{ left: 16, right: 24 }}>
+                    <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 11 }} />
+                    <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={88} />
+                    <Tooltip formatter={(v) => [`${v}/100`, 'Risk Score']} />
+                    <Bar dataKey="risk" radius={[0, 4, 4, 0]}>
+                      {KELURAHAN_DATA.map((d, i) => (
+                        <Cell key={i} fill={riskColor(d.level)} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
               <div className="legend-row">
                 <span className="legend-dot" style={{ background: '#E24B4A' }} /> <span>Kritis</span>
                 <span className="legend-dot" style={{ background: '#EF9F27' }} /> <span>Tinggi</span>
