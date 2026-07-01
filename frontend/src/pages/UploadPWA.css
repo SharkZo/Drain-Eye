@@ -31,6 +31,15 @@
 .char-counter { font-size: 10px; color: #94a3b8; text-align: right; }
 .field-error-text { font-size: 11px; color: #A32D2D; margin-top: -2px; }
 
+/* GPS */
+.btn-gps { background: #E6F1FB; color: #1F4E79; border: 1px solid #93C5E8; border-radius: 8px; padding: 10px 12px; font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; text-align: left; }
+.btn-gps:hover { background: #B5D4F4; }
+.btn-gps:disabled { opacity: 0.6; cursor: not-allowed; }
+.gps-status { font-size: 11px; margin-top: 2px; }
+.gps-status.success { color: #27500A; }
+.gps-status.error { color: #A32D2D; }
+.gps-status.idle { color: #94a3b8; }
+
 /* ERROR */
 .error-box { background: #FCEBEB; color: #A32D2D; border-radius: 8px; padding: 10px 14px; font-size: 13px; border: 1px solid #FCA5A5; display: flex; align-items: flex-start; gap: 8px; line-height: 1.4; }
 

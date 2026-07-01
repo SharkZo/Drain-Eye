@@ -6,6 +6,26 @@ import './UploadPWA.css'
 
 const API = 'https://drain-eye-production.up.railway.app'
 
+// HARUS sinkron dengan KELURAHAN_LIST di lstm_service.py dan
+// KELURAHAN_KECAMATAN di routes_dashboard.py — kalau warga lapor
+// kelurahan di luar daftar ini, laporannya tidak akan ikut terhitung
+// di risk score / dashboard DLH.
+const KELURAHAN_KECAMATAN = {
+  'Pluit':          'Penjaringan',
+  'Koja':           'Koja',
+  'Tambora':        'Tambora',
+  'Cilincing':      'Cilincing',
+  'Palmerah':       'Palmerah',
+  'Penjaringan':    'Penjaringan',
+  'Mampang':        'Mampang Prapatan',
+  'Senen':          'Senen',
+  'Tebet':          'Tebet',
+  'Pasar Minggu':   'Pasar Minggu',
+}
+const KELURAHAN_OPTIONS = Object.keys(KELURAHAN_KECAMATAN)
+
+const JAKARTA_CENTER = { latitude: -6.2088, longitude: 106.8456 }
+
 const SEVERITY_LABELS = {
   clear:             { label: 'Bersih',          color: '#27500A', bg: '#EAF3DE', icon: '✅' },
   partial:           { label: 'Sebagian',         color: '#633806', bg: '#FAEEDA', icon: '⚠️' },
@@ -34,7 +54,6 @@ export default function UploadPWA() {
   const [file, setFile]             = useState(null)
   const [preview, setPreview]       = useState(null)
   const [kelurahan, setKelurahan]   = useState('')
-  const [kecamatan, setKecamatan]   = useState('')
   const [note, setNote]             = useState('')
   const [loading, setLoading]       = useState(false)
   const [loadingStep, setLoadingStep] = useState(0)
@@ -42,6 +61,27 @@ export default function UploadPWA() {
   const [error, setError]           = useState(null)
   const [fieldErrors, setFieldErrors] = useState({})
   const [dragActive, setDragActive] = useState(false)
+
+  const [coords, setCoords]         = useState(JAKARTA_CENTER)
+  const [gpsStatus, setGpsStatus]   = useState('idle') // idle | loading | success | error
+
+  const kecamatan = KELURAHAN_KECAMATAN[kelurahan] || ''
+
+  const useMyLocation = () => {
+    if (!navigator.geolocation) {
+      setGpsStatus('error')
+      return
+    }
+    setGpsStatus('loading')
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setCoords({ latitude: pos.coords.latitude, longitude: pos.coords.longitude })
+        setGpsStatus('success')
+      },
+      () => setGpsStatus('error'),
+      { enableHighAccuracy: true, timeout: 10000 }
+    )
+  }
 
   const validateFile = (f) => {
     if (!f) return 'Pilih foto terlebih dahulu.'
@@ -91,8 +131,7 @@ export default function UploadPWA() {
   const validateForm = () => {
     const errs = {}
     if (!file) errs.file = 'Foto wajib diupload'
-    if (!kelurahan.trim()) errs.kelurahan = 'Kelurahan wajib diisi'
-    if (!kecamatan.trim()) errs.kecamatan = 'Kecamatan wajib diisi'
+    if (!kelurahan) errs.kelurahan = 'Kelurahan wajib dipilih'
     setFieldErrors(errs)
     return Object.keys(errs).length === 0
   }
@@ -114,10 +153,10 @@ export default function UploadPWA() {
 
     const formData = new FormData()
     formData.append('file', file)
-    formData.append('latitude', -6.2088)
-    formData.append('longitude', 106.8456)
-    formData.append('kelurahan', kelurahan.trim())
-    formData.append('kecamatan', kecamatan.trim())
+    formData.append('latitude', coords.latitude)
+    formData.append('longitude', coords.longitude)
+    formData.append('kelurahan', kelurahan)
+    formData.append('kecamatan', kecamatan)
     if (note) formData.append('reporter_note', note.trim())
     formData.append('user_id', user?.id || '')
     formData.append('user_email', user?.email || '')
@@ -149,11 +188,12 @@ export default function UploadPWA() {
     setFile(null)
     setPreview(null)
     setKelurahan('')
-    setKecamatan('')
     setNote('')
     setResult(null)
     setError(null)
     setFieldErrors({})
+    setCoords(JAKARTA_CENTER)
+    setGpsStatus('idle')
   }
 
   const removePhoto = (e) => {
@@ -256,24 +296,43 @@ export default function UploadPWA() {
 
             <div className="form-group">
               <label className="form-label">Kelurahan <span className="required">*</span></label>
-              <input
+              <select
                 className={`form-input ${fieldErrors.kelurahan ? 'input-error' : ''}`}
-                placeholder="Contoh: Pluit"
                 value={kelurahan}
                 onChange={e => { setKelurahan(e.target.value); setFieldErrors(p => ({ ...p, kelurahan: null })) }}
-              />
+              >
+                <option value="">Pilih kelurahan...</option>
+                {KELURAHAN_OPTIONS.map(k => (
+                  <option key={k} value={k}>{k}</option>
+                ))}
+              </select>
               {fieldErrors.kelurahan && <div className="field-error-text">⚠️ {fieldErrors.kelurahan}</div>}
             </div>
 
             <div className="form-group">
-              <label className="form-label">Kecamatan <span className="required">*</span></label>
+              <label className="form-label">Kecamatan</label>
               <input
-                className={`form-input ${fieldErrors.kecamatan ? 'input-error' : ''}`}
-                placeholder="Contoh: Penjaringan"
+                className="form-input"
                 value={kecamatan}
-                onChange={e => { setKecamatan(e.target.value); setFieldErrors(p => ({ ...p, kecamatan: null })) }}
+                placeholder="Otomatis terisi setelah pilih kelurahan"
+                disabled
               />
-              {fieldErrors.kecamatan && <div className="field-error-text">⚠️ {fieldErrors.kecamatan}</div>}
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Lokasi GPS <span className="optional">(opsional, tapi disarankan)</span></label>
+              <button type="button" className="btn-gps" onClick={useMyLocation} disabled={gpsStatus === 'loading'}>
+                {gpsStatus === 'loading' ? '📍 Mencari lokasi...' : '📍 Gunakan Lokasi Saya'}
+              </button>
+              {gpsStatus === 'success' && (
+                <div className="gps-status success">✓ Lokasi terkunci ({coords.latitude.toFixed(4)}, {coords.longitude.toFixed(4)})</div>
+              )}
+              {gpsStatus === 'error' && (
+                <div className="gps-status error">⚠️ Gagal ambil lokasi GPS. Pakai lokasi Jakarta default.</div>
+              )}
+              {gpsStatus === 'idle' && (
+                <div className="gps-status idle">Belum diaktifkan — akan pakai lokasi default Jakarta.</div>
+              )}
             </div>
 
             <div className="form-group">
