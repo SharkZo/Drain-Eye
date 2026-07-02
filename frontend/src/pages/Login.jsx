@@ -62,11 +62,19 @@ export default function Login() {
         return
       }
 
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('role')
         .eq('id', data.user.id)
         .single()
+
+      // PENTING: kalau gagal ambil role, JANGAN diam-diam anggap 'warga'.
+      // Salah redirect DLH Manager ke halaman warga itu membingungkan.
+      if (profileError) {
+        setError('Berhasil masuk, tapi gagal memuat data akun kamu. Coba klik "Masuk" sekali lagi.')
+        setLoading(false)
+        return
+      }
 
       const role = profile?.role || 'warga'
       window.location.href = role === 'warga' ? '/upload' : '/'
