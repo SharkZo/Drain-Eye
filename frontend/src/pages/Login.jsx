@@ -120,9 +120,43 @@ export default function Login() {
     }
   }
 
+  const validateForgot = () => {
+    const errs = {}
+    if (!email.trim()) errs.email = 'Email wajib diisi'
+    else if (!validateEmail(email)) errs.email = 'Format email tidak valid'
+    setFieldErrors(errs)
+    return Object.keys(errs).length === 0
+  }
+
+  const handleForgotPassword = async () => {
+    setError(null)
+    setSuccess(null)
+    if (!validateForgot()) return
+    setLoading(true)
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: `${window.location.origin}/reset-password`
+      })
+
+      if (error) {
+        setError('Gagal mengirim link reset: ' + error.message)
+      } else {
+        setSuccess('Link reset password sudah dikirim. Cek inbox email kamu (dan folder spam kalau tidak muncul).')
+        setEmail('')
+      }
+    } catch (err) {
+      setError('Terjadi kesalahan jaringan. Periksa koneksi internet kamu.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
-      mode === 'login' ? handleLogin() : handleRegister()
+      if (mode === 'login') handleLogin()
+      else if (mode === 'register') handleRegister()
+      else handleForgotPassword()
     }
   }
 
@@ -135,22 +169,31 @@ export default function Login() {
           <div className="login-sub">Sistem Deteksi Sumbatan Drainase DKI Jakarta</div>
         </div>
 
-        <div className="login-tabs">
-          <button
-            className={`login-tab ${mode === 'login' ? 'active' : ''}`}
-            onClick={() => switchMode('login')}
-            disabled={loading}
-          >
-            Masuk
-          </button>
-          <button
-            className={`login-tab ${mode === 'register' ? 'active' : ''}`}
-            onClick={() => switchMode('register')}
-            disabled={loading}
-          >
-            Daftar
-          </button>
-        </div>
+        {mode !== 'forgot' && (
+          <div className="login-tabs">
+            <button
+              className={`login-tab ${mode === 'login' ? 'active' : ''}`}
+              onClick={() => switchMode('login')}
+              disabled={loading}
+            >
+              Masuk
+            </button>
+            <button
+              className={`login-tab ${mode === 'register' ? 'active' : ''}`}
+              onClick={() => switchMode('register')}
+              disabled={loading}
+            >
+              Daftar
+            </button>
+          </div>
+        )}
+
+        {mode === 'forgot' && (
+          <div className="forgot-heading">
+            <div className="forgot-title">🔑 Lupa Password</div>
+            <div className="forgot-sub">Masukkan email kamu, kami kirim link untuk reset password.</div>
+          </div>
+        )}
 
         <div className="login-form">
           {mode === 'register' && (
@@ -184,57 +227,69 @@ export default function Login() {
             {fieldErrors.email && <div className="field-error-text">⚠️ {fieldErrors.email}</div>}
           </div>
 
-          <div className="form-group">
-            <label className="form-label">Password <span className="required">*</span></label>
-            <div className="password-wrap">
-              <input
-                className={`form-input ${fieldErrors.password ? 'input-error' : ''}`}
-                type={showPassword ? 'text' : 'password'}
-                placeholder={mode === 'register' ? 'Minimal 6 karakter' : 'Masukkan password'}
-                value={password}
-                onChange={e => { setPassword(e.target.value); setFieldErrors(p => ({ ...p, password: null })) }}
-                onKeyDown={handleKeyDown}
-                disabled={loading}
-              />
-              <button
-                type="button"
-                className="toggle-password"
-                onClick={() => setShowPassword(!showPassword)}
-                tabIndex={-1}
-              >
-                {showPassword ? '🔒' : '👁️'}
-              </button>
+          {mode !== 'forgot' && (
+            <div className="form-group">
+              <label className="form-label">Password <span className="required">*</span></label>
+              <div className="password-wrap">
+                <input
+                  className={`form-input ${fieldErrors.password ? 'input-error' : ''}`}
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder={mode === 'register' ? 'Minimal 6 karakter' : 'Masukkan password'}
+                  value={password}
+                  onChange={e => { setPassword(e.target.value); setFieldErrors(p => ({ ...p, password: null })) }}
+                  onKeyDown={handleKeyDown}
+                  disabled={loading}
+                />
+                <button
+                  type="button"
+                  className="toggle-password"
+                  onClick={() => setShowPassword(!showPassword)}
+                  tabIndex={-1}
+                >
+                  {showPassword ? '🔒' : '👁️'}
+                </button>
+              </div>
+              {fieldErrors.password && <div className="field-error-text">⚠️ {fieldErrors.password}</div>}
             </div>
-            {fieldErrors.password && <div className="field-error-text">⚠️ {fieldErrors.password}</div>}
-          </div>
+          )}
 
           {error && <div className="login-error">⚠️ {error}</div>}
           {success && <div className="login-success">✅ {success}</div>}
 
           <button
             className={`btn-login ${loading ? 'loading' : ''}`}
-            onClick={mode === 'login' ? handleLogin : handleRegister}
+            onClick={mode === 'login' ? handleLogin : mode === 'register' ? handleRegister : handleForgotPassword}
             disabled={loading}
           >
             {loading ? (
               <span className="btn-spinner-wrap"><span className="btn-spinner"></span> Memproses...</span>
-            ) : mode === 'login' ? '🔐 Masuk' : '📝 Daftar'}
+            ) : mode === 'login' ? '🔐 Masuk' : mode === 'register' ? '📝 Daftar' : '📧 Kirim Link Reset'}
           </button>
 
           {mode === 'login' && (
             <div className="login-note">
               Warga baru? <span className="link" onClick={() => !loading && switchMode('register')}>Daftar di sini</span>
+              <br />
+              <span className="link" onClick={() => !loading && switchMode('forgot')}>Lupa password?</span>
             </div>
           )}
 
-          <div className="login-roles">
-            <div className="role-info">
-              <strong>👤 Warga</strong> — Upload foto drainase & lihat riwayat
+          {mode === 'forgot' && (
+            <div className="login-note">
+              <span className="link" onClick={() => !loading && switchMode('login')}>← Kembali ke halaman masuk</span>
             </div>
-            <div className="role-info">
-              <strong>🏛️ DLH Operator</strong> — Dashboard, alert & maintenance
+          )}
+
+          {mode !== 'forgot' && (
+            <div className="login-roles">
+              <div className="role-info">
+                <strong>👤 Warga</strong> — Upload foto drainase & lihat riwayat
+              </div>
+              <div className="role-info">
+                <strong>🏛️ DLH Operator</strong> — Dashboard, alert & maintenance
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

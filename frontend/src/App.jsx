@@ -9,6 +9,7 @@ import Analitik from './pages/Analitik'
 import Laporan from './pages/Laporan'
 import Peta from './pages/Peta'
 import Login from './pages/Login'
+import ResetPassword from './pages/ResetPassword'
 import './App.css'
 
 function App() {
@@ -17,6 +18,7 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/" element={
             <ProtectedRoute requireDLH={true}>
               <Dashboard />
