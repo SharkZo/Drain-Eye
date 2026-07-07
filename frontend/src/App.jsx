@@ -10,12 +10,14 @@ import Laporan from './pages/Laporan'
 import Peta from './pages/Peta'
 import Login from './pages/Login'
 import ResetPassword from './pages/ResetPassword'
+import InstallPrompt from './components/InstallPrompt'
 import './App.css'
 
 function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
+        <InstallPrompt />
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/reset-password" element={<ResetPassword />} />
