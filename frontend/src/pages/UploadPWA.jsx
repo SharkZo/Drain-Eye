@@ -2,6 +2,7 @@ import { useState, useRef } from 'react'
 import axios from 'axios'
 import { useAuth } from '../AuthContext'
 import Navbar from '../components/Navbar'
+import InstallPrompt from '../components/InstallPrompt'
 import './UploadPWA.css'
 
 const API = 'https://drain-eye-production.up.railway.app'
@@ -209,6 +210,7 @@ export default function UploadPWA() {
   return (
     <div className="pwa-wrap">
       <Navbar title="Upload Foto Drainase" backHref={backHref} />
+      <InstallPrompt />
 
       <div className="pwa-body">
         <h2 className="pwa-heading">Laporkan Drainase Tersumbat</h2>
