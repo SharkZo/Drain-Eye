@@ -1,6 +1,7 @@
 fastapi
 uvicorn
 tensorflow-cpu
+scikit-learn
 python-multipart
 pillow
 python-dotenv
