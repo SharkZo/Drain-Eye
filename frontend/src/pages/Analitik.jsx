@@ -8,7 +8,7 @@ import {
 import './Analitik.css'
 import Navbar from '../components/Navbar'
 
-const API = 'https://drain-eye-production.up.railway.app'
+const API = import.meta.env.VITE_API_URL || 'https://drain-eye-production.up.railway.app'
 
 const COLORS = {
   critical: '#E24B4A',

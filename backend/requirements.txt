@@ -1,10 +1,6 @@
 fastapi
 uvicorn
-ultralytics
-tensorflow
-pandas
-geopandas
-psycopg2-binary
+tensorflow-cpu
 python-multipart
 pillow
 python-dotenv

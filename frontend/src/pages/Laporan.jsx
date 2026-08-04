@@ -3,7 +3,7 @@ import Navbar from '../components/Navbar'
 import { fetchWithRetry } from '../utils/apiClient'
 import './Laporan.css'
 
-const API = 'https://drain-eye-production.up.railway.app'
+const API = import.meta.env.VITE_API_URL || 'https://drain-eye-production.up.railway.app'
 
 const RISK_LABELS = {
   low:      { label: 'Rendah',  color: '#27500A', bg: '#EAF3DE' },

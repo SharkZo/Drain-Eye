@@ -5,7 +5,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 
 import Navbar from '../components/Navbar'
 import './Dashboard.css'
 
-const API = 'https://drain-eye-production.up.railway.app'
+const API = import.meta.env.VITE_API_URL || 'https://drain-eye-production.up.railway.app'
 
 const KELURAHAN_DATA = [
   { name: 'Pluit',           risk: 91, level: 'critical' },

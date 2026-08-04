@@ -4,7 +4,7 @@ import { useAuth } from '../AuthContext'
 import Navbar from '../components/Navbar'
 import './History.css'
 
-const API = 'https://drain-eye-production.up.railway.app'
+const API = import.meta.env.VITE_API_URL || 'https://drain-eye-production.up.railway.app'
 
 const SEVERITY_LABELS = {
   clear:            { label: 'Bersih',          color: '#27500A', bg: '#EAF3DE', icon: '✅' },

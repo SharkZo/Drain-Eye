@@ -4,7 +4,7 @@ import { useAuth } from '../AuthContext'
 import Navbar from '../components/Navbar'
 import './UploadPWA.css'
 
-const API = 'https://drain-eye-production.up.railway.app'
+const API = import.meta.env.VITE_API_URL || 'https://drain-eye-production.up.railway.app'
 
 // HARUS sinkron dengan KELURAHAN_LIST di lstm_service.py dan
 // KELURAHAN_KECAMATAN di routes_dashboard.py — kalau warga lapor

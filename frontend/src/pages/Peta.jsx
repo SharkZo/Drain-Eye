@@ -5,7 +5,7 @@ import Navbar from '../components/Navbar'
 import { fetchWithRetry } from '../utils/apiClient'
 import './Peta.css'
 
-const API = 'https://drain-eye-production.up.railway.app'
+const API = import.meta.env.VITE_API_URL || 'https://drain-eye-production.up.railway.app'
 const JAKARTA_CENTER = [-6.2088, 106.8456]
 
 const LEVEL_COLOR = {
