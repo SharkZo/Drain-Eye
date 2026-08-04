@@ -19,7 +19,7 @@ try:
     import pickle
 
     if os.path.exists(MODEL_PATH):
-        model    = tf.keras.models.load_model(MODEL_PATH)
+        model    = tf.keras.models.load_model(MODEL_PATH, compile=False)
         with open(SCALER_X_PATH, 'rb') as f:
             scaler_X = pickle.load(f)
         with open(SCALER_Y_PATH, 'rb') as f:
