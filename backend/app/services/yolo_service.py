@@ -62,24 +62,23 @@ def _detect_with_yolo(image: np.ndarray) -> dict:
             "confidence_score": 1.0
         }
 
-    # ambil deteksi dengan confidence tertinggi
+    # ambil deteksi dengan confidence tertinggi -> label kelas severity
     boxes = results[0].boxes
     best_idx = boxes.conf.argmax().item()
     best_class = int(boxes.cls[best_idx].item())
     confidence = float(boxes.conf[best_idx].item())
-
     severity = SEVERITY_CLASSES.get(best_class, "clear")
 
-    # konversi class ke persentase sumbatan
-    blockage_map = {
-        "clear": random.uniform(0, 20),
-        "partial": random.uniform(20, 50),
-        "blocked": random.uniform(50, 75),
-        "severely_blocked": random.uniform(75, 100)
-    }
+    # blockage % = rasio luas seluruh box terdeteksi terhadap luas foto
+    # (proxy seberapa besar area saluran yang tertutup sumbatan/sampah)
+    img_h, img_w = image.shape[:2]
+    image_area = img_h * img_w
+    xyxy = boxes.xyxy.cpu().numpy()
+    box_areas = (xyxy[:, 2] - xyxy[:, 0]) * (xyxy[:, 3] - xyxy[:, 1])
+    coverage_pct = min(100.0, float(box_areas.sum()) / image_area * 100)
 
     return {
-        "blockage_percentage": round(blockage_map[severity], 1),
+        "blockage_percentage": round(coverage_pct, 1),
         "severity_class": severity,
         "waste_type": random.choice(WASTE_TYPES),
         "confidence_score": round(confidence, 3)
