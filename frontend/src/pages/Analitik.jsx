@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import axios from 'axios'
 import { fetchWithRetry } from '../utils/apiClient'
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -17,48 +16,96 @@ const COLORS = {
   low:      '#3B6D11',
 }
 
-const TREND_DATA = [
-  { day: 'Sen', risk_avg: 42, blockage_avg: 55, reports: 12 },
-  { day: 'Sel', risk_avg: 38, blockage_avg: 48, reports: 9  },
-  { day: 'Rab', risk_avg: 51, blockage_avg: 62, reports: 15 },
-  { day: 'Kam', risk_avg: 67, blockage_avg: 71, reports: 21 },
-  { day: 'Jum', risk_avg: 72, blockage_avg: 78, reports: 28 },
-  { day: 'Sab', risk_avg: 58, blockage_avg: 65, reports: 19 },
-  { day: 'Min', risk_avg: 45, blockage_avg: 52, reports: 14 },
-]
+const SEVERITY_LABEL = {
+  severely_blocked: 'Sangat Tersumbat',
+  blocked:          'Tersumbat',
+  partial:          'Sebagian',
+  clear:            'Bersih',
+}
 
-const SEVERITY_PIE = [
-  { name: 'Sangat Tersumbat', value: 12, color: '#E24B4A' },
-  { name: 'Tersumbat',        value: 23, color: '#EF9F27' },
-  { name: 'Sebagian',         value: 31, color: '#F5C842' },
-  { name: 'Bersih',           value: 21, color: '#3B6D11' },
-]
+const SEVERITY_COLOR = {
+  severely_blocked: '#E24B4A',
+  blocked:          '#EF9F27',
+  partial:          '#F5C842',
+  clear:            '#3B6D11',
+}
+
+// hitung jumlah laporan & rata-rata sumbatan per hari untuk 7 hari terakhir dari data histori asli
+function buildDailyTrend(history) {
+  const days = []
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date()
+    d.setDate(d.getDate() - i)
+    const dayStr = d.toISOString().slice(0, 10)
+    const label = d.toLocaleDateString('id-ID', { weekday: 'short' })
+
+    const dayRecords = history.filter(h => (h.timestamp || '').startsWith(dayStr))
+    const reports = dayRecords.length
+    const avgBlockage = reports
+      ? dayRecords.reduce((s, r) => s + (r.blockage_percentage || 0), 0) / reports
+      : 0
+
+    days.push({ day: label, reports, blockage_avg: Math.round(avgBlockage * 10) / 10 })
+  }
+  return days
+}
 
 function ChartSkeleton({ height = 220 }) {
   return <div className="chart-skeleton" style={{ height }} />
 }
 
 export default function Analitik() {
-  const [riskData, setRiskData]   = useState([])
-  const [loading, setLoading]     = useState(true)
+  const [riskData, setRiskData]     = useState([])
+  const [history, setHistory]       = useState([])
+  const [stats, setStats]           = useState(null)
+  const [loading, setLoading]       = useState(true)
   const [fetchError, setFetchError] = useState(false)
   const [retryStatus, setRetryStatus] = useState(null)
 
-  const fetchRisk = () => {
+  const fetchAll = () => {
     setLoading(true)
     setFetchError(false)
     setRetryStatus(null)
-    fetchWithRetry(`${API}/api/risk/all`, {
-      onRetry: (a, m) => setRetryStatus(`Menghubungkan ke server... (percobaan ${a}/${m})`)
-    })
-      .then(r => setRiskData(r.data.data || []))
+    const onRetry = (a, m) => setRetryStatus(`Menghubungkan ke server... (percobaan ${a}/${m})`)
+
+    Promise.all([
+      fetchWithRetry(`${API}/api/risk/all`, { onRetry }),
+      fetchWithRetry(`${API}/api/detection/history?limit=1000`, { onRetry }),
+      fetchWithRetry(`${API}/api/detection/stats`, { onRetry }),
+    ])
+      .then(([risk, hist, st]) => {
+        setRiskData(risk.data.data || [])
+        setHistory(hist.data.data || [])
+        setStats(st.data)
+      })
       .catch(() => setFetchError(true))
       .finally(() => { setLoading(false); setRetryStatus(null) })
   }
 
   useEffect(() => {
-    fetchRisk()
+    fetchAll()
   }, [])
+
+  const now = new Date()
+  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+  const weekRecords = history.filter(d => d.timestamp && new Date(d.timestamp) >= sevenDaysAgo)
+
+  const totalWeek = weekRecords.length
+  const avgRisk = riskData.length
+    ? Math.round((riskData.reduce((s, d) => s + d.risk_score, 0) / riskData.length) * 10) / 10
+    : 0
+  const totalHandled = history.filter(d => d.status === 'handled').length
+  const avgBlockage = history.length
+    ? Math.round((history.reduce((s, d) => s + (d.blockage_percentage || 0), 0) / history.length) * 10) / 10
+    : 0
+
+  const trendData = buildDailyTrend(history)
+
+  const severityPie = stats
+    ? Object.entries(SEVERITY_LABEL)
+        .map(([key, name]) => ({ name, value: stats[key] || 0, color: SEVERITY_COLOR[key] }))
+        .filter(s => s.value > 0)
+    : []
 
   return (
     <div className="ana-wrap">
@@ -66,97 +113,101 @@ export default function Analitik() {
 
       <div className="ana-body">
 
+        {loading && retryStatus && (
+          <div className="retry-status-banner">🔄 {retryStatus}</div>
+        )}
+
+        {!loading && fetchError && (
+          <div className="ana-error-banner">
+            <span>⚠️ Gagal memuat data analitik.</span>
+            <button onClick={fetchAll} className="btn-retry-inline">🔄 Coba Lagi</button>
+          </div>
+        )}
+
         <div className="ana-summary">
           <div className="ana-card">
-            <div className="ana-val red">87</div>
+            <div className="ana-val red">{loading ? '-' : totalWeek}</div>
             <div className="ana-lbl">Total Laporan Minggu Ini</div>
           </div>
           <div className="ana-card">
-            <div className="ana-val amber">52.4</div>
+            <div className="ana-val amber">{loading ? '-' : avgRisk}</div>
             <div className="ana-lbl">Rata-rata Risk Score</div>
           </div>
           <div className="ana-card">
-            <div className="ana-val green">41</div>
+            <div className="ana-val green">{loading ? '-' : totalHandled}</div>
             <div className="ana-lbl">Laporan Ditangani</div>
           </div>
           <div className="ana-card">
-            <div className="ana-val blue">62.3%</div>
+            <div className="ana-val blue">{loading ? '-' : `${avgBlockage}%`}</div>
             <div className="ana-lbl">Rata-rata Sumbatan</div>
           </div>
         </div>
 
         <div className="chart-card">
-          <div className="chart-title">📊 Tren Risk Score & Sumbatan (7 Hari)</div>
-          <ResponsiveContainer width="100%" height={240}>
-            <LineChart data={TREND_DATA} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-              <XAxis dataKey="day" tick={{ fontSize: 12 }} />
-              <YAxis domain={[0, 100]} tick={{ fontSize: 12 }} />
-              <Tooltip />
-              <Legend />
-              <Line type="monotone" dataKey="risk_avg"     name="Risk Score"  stroke="#E24B4A" strokeWidth={2} dot={{ r: 4 }} />
-              <Line type="monotone" dataKey="blockage_avg" name="% Sumbatan"  stroke="#EF9F27" strokeWidth={2} dot={{ r: 4 }} />
-            </LineChart>
-          </ResponsiveContainer>
+          <div className="chart-title">📊 Tren Rata-rata Sumbatan (7 Hari)</div>
+          {loading ? <ChartSkeleton /> : (
+            <ResponsiveContainer width="100%" height={240}>
+              <LineChart data={trendData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                <XAxis dataKey="day" tick={{ fontSize: 12 }} />
+                <YAxis domain={[0, 100]} tick={{ fontSize: 12 }} />
+                <Tooltip />
+                <Legend />
+                <Line type="monotone" dataKey="blockage_avg" name="% Sumbatan" stroke="#EF9F27" strokeWidth={2} dot={{ r: 4 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          )}
         </div>
 
         <div className="grid-2">
           <div className="chart-card">
             <div className="chart-title">📋 Jumlah Laporan per Hari</div>
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={TREND_DATA} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                <XAxis dataKey="day" tick={{ fontSize: 12 }} />
-                <YAxis tick={{ fontSize: 12 }} />
-                <Tooltip />
-                <Bar dataKey="reports" name="Laporan" radius={[4, 4, 0, 0]}>
-                  {TREND_DATA.map((_, i) => (
-                    <Cell key={i} fill={i === 4 ? '#E24B4A' : '#2E74B5'} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+            {loading ? <ChartSkeleton height={200} /> : (
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={trendData} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                  <XAxis dataKey="day" tick={{ fontSize: 12 }} />
+                  <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
+                  <Tooltip />
+                  <Bar dataKey="reports" name="Laporan" radius={[4, 4, 0, 0]} fill="#2E74B5" />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </div>
 
           <div className="chart-card">
             <div className="chart-title">🥧 Distribusi Tingkat Sumbatan</div>
-            <ResponsiveContainer width="100%" height={200}>
-              <PieChart>
-                <Pie
-                  data={SEVERITY_PIE}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={50}
-                  outerRadius={80}
-                  dataKey="value"
-                  label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
-                  labelLine={false}
-                >
-                  {SEVERITY_PIE.map((entry, i) => (
-                    <Cell key={i} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(v, n) => [v, n]} />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
+            {loading ? <ChartSkeleton height={200} /> : severityPie.length === 0 ? (
+              <div className="ana-empty-state">Belum ada data deteksi.</div>
+            ) : (
+              <ResponsiveContainer width="100%" height={200}>
+                <PieChart>
+                  <Pie
+                    data={severityPie}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={50}
+                    outerRadius={80}
+                    dataKey="value"
+                    label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
+                    labelLine={false}
+                  >
+                    {severityPie.map((entry, i) => (
+                      <Cell key={i} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(v, n) => [v, n]} />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
 
         <div className="chart-card">
           <div className="chart-title">🗺️ Risk Score per Kelurahan (Real-time LSTM)</div>
 
-          {loading && retryStatus && (
-            <div className="retry-status-banner">🔄 {retryStatus}</div>
-          )}
           {loading && <ChartSkeleton />}
-
-          {!loading && fetchError && (
-            <div className="ana-error-banner">
-              <span>⚠️ Gagal memuat data risk score real-time.</span>
-              <button onClick={fetchRisk} className="btn-retry-inline">🔄 Coba Lagi</button>
-            </div>
-          )}
 
           {!loading && !fetchError && riskData.length === 0 && (
             <div className="ana-empty-state">Belum ada data risk score tersedia saat ini.</div>

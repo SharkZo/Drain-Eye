@@ -9,19 +9,7 @@ import './Dashboard.css'
 const API = import.meta.env.VITE_API_URL || 'https://drain-eye-production.up.railway.app'
 const JAKARTA_CENTER = [-6.2088, 106.8456]
 
-const ALERTS = [
-  { id: 1, kelurahan: 'Pluit',    risk: 91, level: 'critical', message: 'Risiko banjir kritis — 3 titik tersumbat parah', time: '10:28 WIB' },
-  { id: 2, kelurahan: 'Koja',     risk: 84, level: 'critical', message: 'Drainase 89% tersumbat — laporan warga x4',       time: '10:15 WIB' },
-  { id: 3, kelurahan: 'Tambora',  risk: 72, level: 'high',     message: 'Hujan 48 jam diprediksi lebat — risiko meningkat', time: 'BMKG'      },
-]
-
-const QUEUE = [
-  { id: 1, priority: 'P1', location: 'Jl. Pluit Raya — drainase utama',    team: 'Tim A', hours: 2,   status: 'assigned'   },
-  { id: 2, priority: 'P1', location: 'Jl. Koja Utara — gorong-gorong',     team: 'Tim B', hours: 3,   status: 'in_progress' },
-  { id: 3, priority: 'P2', location: 'Gg. Tambora 3 — saluran kecil',      team: 'Tim C', hours: 1,   status: 'pending'    },
-  { id: 4, priority: 'P2', location: 'Cilincing — drainase pasar',         team: 'Tim D', hours: 2.5, status: 'pending'    },
-  { id: 5, priority: 'P3', location: 'Mampang — saluran sekunder',         team: 'Tim E', hours: 1.5, status: 'pending'    },
-]
+const priorityLabel = (p) => (p === 1 ? 'P1' : 'P2')
 
 const riskColor = (level) => ({
   critical: '#E24B4A',
@@ -136,7 +124,9 @@ export default function Dashboard() {
           <a href="/"         className="nav-item active">📊 Dashboard</a>
           <a href="/upload"   className="nav-item">📷 Upload Foto</a>
           <a href="/history"  className="nav-item">🕐 Riwayat</a>
-          <a href="/alert"    className="nav-item">🔔 Alert <span className="nav-badge">3</span></a>
+          <a href="/alert"    className="nav-item">
+            🔔 Alert {summary?.active_alerts?.length > 0 && <span className="nav-badge">{summary.active_alerts.length}</span>}
+          </a>
           <a href="/analitik" className="nav-item">📈 Analitik</a>
           <a href="/peta"     className="nav-item">🗺️ Peta</a>
           <a href="/laporan"  className="nav-item">📄 Laporan</a>
@@ -241,16 +231,18 @@ export default function Dashboard() {
 
             <div className="card">
               <div className="card-title">🔔 Alert Aktif</div>
-              {ALERTS.length === 0 ? (
+              {!summary?.active_alerts?.length ? (
                 <div className="empty-state-sm">✅ Tidak ada alert aktif saat ini</div>
               ) : (
-                ALERTS.map(a => (
-                  <div key={a.id} className="alert-row">
-                    <div className="alert-dot" style={{ background: riskColor(a.level) }} />
+                summary.active_alerts.map(a => (
+                  <div key={a.alert_id} className="alert-row">
+                    <div className="alert-dot" style={{ background: riskColor(a.risk_level) }} />
                     <div className="alert-body">
-                      <div className="alert-title">{a.kelurahan} — Skor {a.risk}/100</div>
+                      <div className="alert-title">{a.kelurahan} — Skor {Math.round(a.risk_score)}/100</div>
                       <div className="alert-msg">{a.message}</div>
-                      <div className="alert-time">{a.time}</div>
+                      <div className="alert-time">
+                        {a.triggered_at && new Date(a.triggered_at).toLocaleString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB
+                      </div>
                     </div>
                     <button className="btn-ack">Tandai</button>
                   </div>
@@ -290,7 +282,7 @@ export default function Dashboard() {
 
           <div className="card">
             <div className="card-title">🔧 Antrian Maintenance Hari Ini</div>
-            {QUEUE.length === 0 ? (
+            {!summary?.maintenance_queue?.length ? (
               <div className="empty-state-sm">✅ Tidak ada antrian maintenance saat ini</div>
             ) : (
               <div className="table-scroll">
@@ -300,21 +292,18 @@ export default function Dashboard() {
                       <th>Prioritas</th>
                       <th>Lokasi</th>
                       <th>Tim</th>
-                      <th>Est. Waktu</th>
                       <th>Status</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {QUEUE.map(q => (
-                      <tr key={q.id}>
-                        <td><span className="priority-badge" style={priorityStyle(q.priority)}>{q.priority}</span></td>
-                        <td>{q.location}</td>
-                        <td>{q.team}</td>
-                        <td>{q.hours} jam</td>
+                    {summary.maintenance_queue.map(q => (
+                      <tr key={q.task_id}>
+                        <td><span className="priority-badge" style={priorityStyle(priorityLabel(q.priority))}>{priorityLabel(q.priority)}</span></td>
+                        <td>{q.location_detail}</td>
+                        <td>{q.assigned_team || 'Belum ditugaskan'}</td>
                         <td>
                           <span className={`status-badge status-${q.status}`}>
-                            {q.status === 'assigned'    ? 'Ditugaskan' :
-                             q.status === 'in_progress' ? 'Sedang Dikerjakan' : 'Menunggu'}
+                            {q.status === 'handled' ? 'Ditangani' : 'Menunggu'}
                           </span>
                         </td>
                       </tr>
