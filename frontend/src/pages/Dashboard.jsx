@@ -1,24 +1,13 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { fetchWithRetry } from '../utils/apiClient'
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
+import { MapContainer, TileLayer, GeoJSON } from 'react-leaflet'
+import 'leaflet/dist/leaflet.css'
 import Navbar from '../components/Navbar'
 import './Dashboard.css'
 
 const API = import.meta.env.VITE_API_URL || 'https://drain-eye-production.up.railway.app'
-
-const KELURAHAN_DATA = [
-  { name: 'Pluit',           risk: 91, level: 'critical' },
-  { name: 'Koja',            risk: 84, level: 'critical' },
-  { name: 'Tambora',         risk: 72, level: 'high'     },
-  { name: 'Cilincing',       risk: 65, level: 'high'     },
-  { name: 'Palmerah',        risk: 58, level: 'high'     },
-  { name: 'Penjaringan',     risk: 53, level: 'high'     },
-  { name: 'Mampang',         risk: 44, level: 'moderate' },
-  { name: 'Senen',           risk: 38, level: 'moderate' },
-  { name: 'Tebet',           risk: 28, level: 'low'      },
-  { name: 'Pasar Minggu',    risk: 21, level: 'low'      },
-]
+const JAKARTA_CENTER = [-6.2088, 106.8456]
 
 const ALERTS = [
   { id: 1, kelurahan: 'Pluit',    risk: 91, level: 'critical', message: 'Risiko banjir kritis — 3 titik tersumbat parah', time: '10:28 WIB' },
@@ -47,9 +36,23 @@ const priorityStyle = (p) => ({
   P3: { background: '#EAF3DE', color: '#27500A' },
 }[p] || {})
 
-function citywideScore(data) {
-  const avg = data.reduce((s, d) => s + d.risk, 0) / data.length
+function citywideScore(riskScores) {
+  if (!riskScores || riskScores.length === 0) return 0
+  const avg = riskScores.reduce((s, d) => s + d.risk_score, 0) / riskScores.length
   return Math.round(avg)
+}
+
+// ambil skor risiko tertinggi per kecamatan (satu kecamatan bisa punya beberapa kelurahan)
+function aggregateByKecamatan(riskScores) {
+  const byKecamatan = {}
+  for (const r of riskScores || []) {
+    const key = (r.kecamatan || '').toUpperCase()
+    if (!key) continue
+    if (!byKecamatan[key] || r.risk_score > byKecamatan[key].risk_score) {
+      byKecamatan[key] = r
+    }
+  }
+  return byKecamatan
 }
 
 function scoreLevel(score) {
@@ -66,6 +69,7 @@ function SkeletonCard() {
 export default function Dashboard() {
   const [summary, setSummary]   = useState(null)
   const [stats, setStats]       = useState(null)
+  const [geoData, setGeoData]   = useState(null)
   const [loadingSummary, setLoadingSummary] = useState(true)
   const [loadingStats, setLoadingStats]     = useState(true)
   const [fetchError, setFetchError] = useState(false)
@@ -92,10 +96,35 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchData()
+    fetch('/data/jakarta_kecamatan.geojson')
+      .then(r => r.json())
+      .then(setGeoData)
+      .catch(() => {})
   }, [])
 
-  const cityScore = citywideScore(KELURAHAN_DATA)
+  const kecamatanRisk = aggregateByKecamatan(summary?.risk_scores)
+  const cityScore = citywideScore(summary?.risk_scores)
   const cityLevel = scoreLevel(cityScore)
+
+  const geojsonStyle = (feature) => {
+    const r = kecamatanRisk[feature.properties.name]
+    return {
+      fillColor: r ? riskColor(r.risk_level) : '#d1d5db',
+      fillOpacity: r ? 0.65 : 0.2,
+      color: '#ffffff',
+      weight: 1.5,
+    }
+  }
+
+  const onEachKecamatan = (feature, layer) => {
+    const name = feature.properties.name
+    const r = kecamatanRisk[name]
+    layer.bindPopup(
+      r
+        ? `<strong>${name}</strong><br/>Skor risiko: ${r.risk_score}/100<br/>Level: ${r.risk_level}`
+        : `<strong>${name}</strong><br/>Belum ada data`
+    )
+  }
 
   return (
     <div className="dash-wrap">
@@ -177,26 +206,36 @@ export default function Dashboard() {
           <div className="grid-2">
 
             <div className="card">
-              <div className="card-title">📊 Risk Score per Kelurahan</div>
-              <div style={{ flex: 1, minHeight: 240 }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={KELURAHAN_DATA} layout="vertical" margin={{ left: 16, right: 24 }}>
-                    <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 11 }} />
-                    <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={88} />
-                    <Tooltip formatter={(v) => [`${v}/100`, 'Risk Score']} />
-                    <Bar dataKey="risk" radius={[0, 4, 4, 0]}>
-                      {KELURAHAN_DATA.map((d, i) => (
-                        <Cell key={i} fill={riskColor(d.level)} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
+              <div className="card-title">🗺️ Risk Score per Kecamatan</div>
+              <div style={{ flex: 1, minHeight: 380, borderRadius: 10, overflow: 'hidden' }}>
+                {geoData ? (
+                  <MapContainer
+                    center={JAKARTA_CENTER}
+                    zoom={11}
+                    scrollWheelZoom={false}
+                    style={{ height: '380px', width: '100%' }}
+                  >
+                    <TileLayer
+                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    />
+                    <GeoJSON
+                      key={JSON.stringify(kecamatanRisk)}
+                      data={geoData}
+                      style={geojsonStyle}
+                      onEachFeature={onEachKecamatan}
+                    />
+                  </MapContainer>
+                ) : (
+                  <div className="empty-state-sm">Memuat peta...</div>
+                )}
               </div>
               <div className="legend-row">
                 <span className="legend-dot" style={{ background: '#E24B4A' }} /> <span>Kritis</span>
                 <span className="legend-dot" style={{ background: '#EF9F27' }} /> <span>Tinggi</span>
                 <span className="legend-dot" style={{ background: '#F5C842' }} /> <span>Sedang</span>
                 <span className="legend-dot" style={{ background: '#3B6D11' }} /> <span>Aman</span>
+                <span className="legend-dot" style={{ background: '#d1d5db' }} /> <span>Belum ada data</span>
               </div>
             </div>
 
