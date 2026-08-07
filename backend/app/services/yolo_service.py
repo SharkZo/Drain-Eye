@@ -2,6 +2,8 @@ import numpy as np
 import random
 import os
 
+from app.services import waste_service
+
 
 # ── Cek apakah model YOLOv8 tersedia ──
 # Saat model belum ditraining, sistem pakai mode simulasi
@@ -28,8 +30,6 @@ SEVERITY_CLASSES = {
     2: "blocked",
     3: "severely_blocked"
 }
-
-WASTE_TYPES = ["organic", "plastic", "debris", "mixed"]
 
 
 def detect_blockage(image: np.ndarray) -> dict:
@@ -80,7 +80,7 @@ def _detect_with_yolo(image: np.ndarray) -> dict:
     return {
         "blockage_percentage": round(coverage_pct, 1),
         "severity_class": severity,
-        "waste_type": random.choice(WASTE_TYPES),
+        "waste_type": waste_service.predict_waste_type(image),
         "confidence_score": round(confidence, 3)
     }
 
@@ -110,6 +110,6 @@ def _detect_simulation(image: np.ndarray) -> dict:
     return {
         "blockage_percentage": blockage_pct,
         "severity_class": severity,
-        "waste_type": random.choice(WASTE_TYPES),
+        "waste_type": waste_service.predict_waste_type(image),
         "confidence_score": confidence
     }
