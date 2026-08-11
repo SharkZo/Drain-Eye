@@ -13,6 +13,10 @@ dist/
 # Model (terlalu besar untuk GitHub)
 model/yolov8/*.pt
 
+# Dataset training mentah (foto sumber, bukan model) - tidak perlu ikut repo
+model/severity/raw_dataset/
+model/severity/raw_dataset.zip
+
 # Environment
 .env
 *.env

@@ -1,34 +1,45 @@
 import numpy as np
-import random
 import os
+import random
+import json
 
 from app.services import waste_service
 
-
-# ── Cek apakah model YOLOv8 tersedia ──
-# Saat model belum ditraining, sistem pakai mode simulasi
+# path model
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-YOLO_MODEL_PATH = os.path.join(BASE_DIR, "model", "yolov8", "drain_eye_model.pt")
+SEVERITY_MODEL_PATH = os.path.join(BASE_DIR, "model", "severity", "severity_classifier.onnx")
+CLASS_NAMES_PATH = os.path.join(BASE_DIR, "model", "severity", "class_names.json")
+INPUT_SIZE = 224
+
 MODEL_AVAILABLE = False
+session = None
+class_names = {}
 
 try:
-    from ultralytics import YOLO
-    if os.path.exists(YOLO_MODEL_PATH):
-        model = YOLO(YOLO_MODEL_PATH)
+    import onnxruntime as ort
+
+    if os.path.exists(SEVERITY_MODEL_PATH) and os.path.exists(CLASS_NAMES_PATH):
+        session = ort.InferenceSession(SEVERITY_MODEL_PATH, providers=["CPUExecutionProvider"])
+        with open(CLASS_NAMES_PATH) as f:
+            class_names = {int(k): v for k, v in json.load(f).items()}
         MODEL_AVAILABLE = True
-        print(f"✅ YOLOv8 model loaded: {YOLO_MODEL_PATH}")
+        print(f"✅ Severity classifier (ONNX) loaded: {SEVERITY_MODEL_PATH}")
     else:
-        print(f"⚠️  Model belum ada di {YOLO_MODEL_PATH} — pakai mode simulasi")
+        print(f"⚠️  Severity classifier belum ada di {SEVERITY_MODEL_PATH} — pakai mode simulasi")
 except ImportError:
-    print("⚠️  Ultralytics belum terinstall — pakai mode simulasi")
+    print("⚠️  onnxruntime belum terinstall — severity pakai mode simulasi")
+except Exception as e:
+    print(f"⚠️  Severity classifier load error: {e} — pakai mode simulasi")
 
+SEVERITY_CLASSES_ORDER = ["clear", "partial", "blocked", "severely_blocked"]
 
-# mapping class index ke label
-SEVERITY_CLASSES = {
-    0: "clear",
-    1: "partial",
-    2: "blocked",
-    3: "severely_blocked"
+# titik tengah rentang persentase tiap kelas — dipakai untuk hitung blockage_percentage
+# sebagai expected value dari distribusi confidence model (bukan cuma kelas top-1)
+CLASS_MIDPOINT = {
+    "clear":            10.0,
+    "partial":          35.0,
+    "blocked":          62.5,
+    "severely_blocked": 87.5,
 }
 
 
@@ -36,53 +47,67 @@ def detect_blockage(image: np.ndarray) -> dict:
     """
     Deteksi tingkat sumbatan drainase dari gambar.
 
-    Kalau model sudah ada → pakai YOLOv8 sungguhan.
-    Kalau belum → pakai simulasi untuk development/testing.
+    Kalau model sudah ada -> pakai severity classifier (ONNX) yang sudah di-fine-tune.
+    Kalau belum -> pakai simulasi untuk development/testing.
 
     Returns:
         dict dengan blockage_percentage, severity_class,
         waste_type, dan confidence_score
     """
-
     if MODEL_AVAILABLE:
-        return _detect_with_yolo(image)
+        return _detect_with_model(image)
     else:
         return _detect_simulation(image)
 
 
-def _detect_with_yolo(image: np.ndarray) -> dict:
-    """Deteksi menggunakan model YOLOv8 yang sudah ditraining."""
-    results = model(image)
+def _preprocess(image: np.ndarray) -> np.ndarray:
+    """image sudah RGB ternormalisasi 0-1 (lihat image_preprocess.py) -> resize ke
+    input size model, HWC -> CHW, tambah batch dimension."""
+    from PIL import Image as PILImage
 
-    if len(results) == 0 or len(results[0].boxes) == 0:
+    img_uint8 = (image * 255).astype(np.uint8)
+    img = PILImage.fromarray(img_uint8).resize((INPUT_SIZE, INPUT_SIZE))
+    arr = np.array(img).astype(np.float32) / 255.0
+    arr = arr.transpose(2, 0, 1)
+    arr = np.expand_dims(arr, axis=0)
+    return arr
+
+
+def _softmax(x):
+    e = np.exp(x - np.max(x))
+    return e / e.sum()
+
+
+def _detect_with_model(image: np.ndarray) -> dict:
+    """Deteksi menggunakan severity classifier yang sudah ditraining."""
+    try:
+        input_tensor = _preprocess(image)
+        input_name = session.get_inputs()[0].name
+        outputs = session.run(None, {input_name: input_tensor})
+        probs = outputs[0][0]
+        if not np.isclose(probs.sum(), 1.0, atol=0.05):
+            probs = _softmax(probs)
+
+        top_idx = int(np.argmax(probs))
+        confidence = float(probs[top_idx])
+        severity = class_names.get(top_idx, "clear")
+
+        # blockage % = expected value (confidence tiap kelas x titik tengah rentangnya)
+        blockage_pct = sum(
+            float(probs[idx]) * CLASS_MIDPOINT.get(class_names.get(idx, "clear"), 0.0)
+            for idx in range(len(probs))
+        )
+        blockage_pct = min(100.0, max(0.0, blockage_pct))
+
         return {
-            "blockage_percentage": 0.0,
-            "severity_class": "clear",
-            "waste_type": None,
-            "confidence_score": 1.0
+            "blockage_percentage": round(blockage_pct, 1),
+            "severity_class": severity,
+            "waste_type": waste_service.predict_waste_type(image),
+            "confidence_score": round(confidence, 3),
         }
-
-    # ambil deteksi dengan confidence tertinggi -> label kelas severity
-    boxes = results[0].boxes
-    best_idx = boxes.conf.argmax().item()
-    best_class = int(boxes.cls[best_idx].item())
-    confidence = float(boxes.conf[best_idx].item())
-    severity = SEVERITY_CLASSES.get(best_class, "clear")
-
-    # blockage % = rasio luas seluruh box terdeteksi terhadap luas foto
-    # (proxy seberapa besar area saluran yang tertutup sumbatan/sampah)
-    img_h, img_w = image.shape[:2]
-    image_area = img_h * img_w
-    xyxy = boxes.xyxy.cpu().numpy()
-    box_areas = (xyxy[:, 2] - xyxy[:, 0]) * (xyxy[:, 3] - xyxy[:, 1])
-    coverage_pct = min(100.0, float(box_areas.sum()) / image_area * 100)
-
-    return {
-        "blockage_percentage": round(coverage_pct, 1),
-        "severity_class": severity,
-        "waste_type": waste_service.predict_waste_type(image),
-        "confidence_score": round(confidence, 3)
-    }
+    except Exception as e:
+        print(f"Severity classification error: {e}")
+        return _detect_simulation(image)
 
 
 def _detect_simulation(image: np.ndarray) -> dict:
@@ -90,11 +115,9 @@ def _detect_simulation(image: np.ndarray) -> dict:
     Mode simulasi — dipakai saat model belum ditraining.
     Menghasilkan hasil deteksi acak yang realistis untuk testing.
     """
-    # simulasi distribusi yang realistis
-    # mayoritas partial/blocked, sedikit clear/severely
     weights = [0.15, 0.35, 0.35, 0.15]
     severity_idx = random.choices(range(4), weights=weights)[0]
-    severity = SEVERITY_CLASSES[severity_idx]
+    severity = SEVERITY_CLASSES_ORDER[severity_idx]
 
     blockage_ranges = {
         "clear": (0, 20),
